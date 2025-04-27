@@ -1,7 +1,16 @@
 <!-- MermaidViewer.vue -->
 <template>
     <div class="mermaid-viewer-container">
+        <div class="notification" v-if="notification.visible" :class="notification.type">
+            {{ notification.message }}
+        </div>
         <div class="controls">
+            <button @click="exportAsSvg" class="control-button" title="Экспорт в SVG">
+                <span class="export-icon">SVG</span>
+            </button>
+            <button @click="exportAsPng" class="control-button" title="Экспорт в PNG">
+                <span class="export-icon">PNG</span>
+            </button>
             <button @click="zoomIn" class="control-button" title="Увеличить">+</button>
             <button @click="zoomOut" class="control-button" title="Уменьшить">-</button>
             <button @click="centerDiagram" class="control-button" title="Сбросить вид">↻</button>
@@ -25,14 +34,9 @@
                 :style="transformStyle"></div>
         </div>
 
-        <SideMenu
-        :is-open="isMenuOpen"
-        :diagram-code="diagramContent"
-        :mermaid-config="mermaidConfig"
-        @close="isMenuOpen = false"
-        @update:diagram-code="updateDiagramCode"
-        @update:mermaid-config="updateMermaidConfig"
-        />
+        <SideMenu :is-open="isMenuOpen" :diagram-code="diagramContent" :mermaid-config="mermaidConfig"
+            @close="isMenuOpen = false" @update:diagram-code="updateDiagramCode"
+            @update:mermaid-config="updateMermaidConfig" />
 
     </div>
 </template>
@@ -43,6 +47,14 @@ import mermaid from 'mermaid';
 import SideMenu from './SideMenu.vue';
 // Импортируем плагин подсветки
 import HighlightPlugin from './HighlightPlugin.js';
+
+// 1. Импортировать плагин экспорта в начале файла:
+import SvgExportPlugin from '@/SvgExportPlugin.js';
+
+// 2. Добавить ref для экземпляра плагина экспорта:
+const svgExportPlugin = ref(null);
+
+
 
 const props = defineProps({
     diagramPath: {
@@ -68,61 +80,88 @@ const diagramContent = ref('');
 const isHighQuality = ref(false); // По умолчанию высокое качество
 const isLoading = ref(true); // Добавляем состояние загрузки
 
+const notification = ref({
+    visible: false,
+    message: '',
+    type: 'info',
+    timeout: null
+});
+
+// 4. Инициализировать плагин экспорта вместе с плагином подсветки:
+function initExportPlugin() {
+    // Создаем экземпляр плагина экспорта с настройками
+    svgExportPlugin.value = new SvgExportPlugin({
+        fileName: 'mermaid-diagram',
+        background: mermaidConfig.value.backgroundColor,
+        addWatermark: false,
+        includeStyles: true,
+        scale: 2 // Масштаб для PNG экспорта
+    });
+}
+
 
 // Настройки mermaid
 const mermaidConfig = ref({
-  theme: 'default',
-  backgroundColor: '#fafafa',
-  fontFamily: 'sans-serif',
-  fontSize: 14,
-  primaryColor: '#1f77b4',
-  secondaryColor: '#ff7f0e',
-  textColor: '#333333',
-  lineColor: '#666666',
-  useMaxWidth: true,
-  enableAnimations: true,
-  curve: 'basis'
+    theme: 'default',
+    backgroundColor: '#fafafa',
+    fontFamily: 'sans-serif',
+    fontSize: 14,
+    primaryColor: '#1f77b4',
+    secondaryColor: '#ff7f0e',
+    textColor: '#333333',
+    lineColor: '#666666',
+    useMaxWidth: true,
+    enableAnimations: true,
+    curve: 'basis'
 });
 
 // Computed styles
 const transformStyle = computed(() => {
     return {
         transform: `translate(${translateX.value}px, ${translateY.value}px) scale(${scale.value})`,
-          transformOrigin: 'center center'
+        transformOrigin: 'center center'
     };
 });
 
 function updateDiagramCode(newCode) {
-  diagramContent.value = newCode;
-  renderDiagram();
+    diagramContent.value = newCode;
+    renderDiagram();
 }
 
 // Открыть/закрыть боковое меню
 function toggleMenu() {
-  isMenuOpen.value = !isMenuOpen.value;
+    isMenuOpen.value = !isMenuOpen.value;
 }
 
 
 // Обновление настроек Mermaid из меню
 function updateMermaidConfig(newConfig) {
-  mermaidConfig.value = newConfig;
-  
-  // Обновляем конфигурацию mermaid
-  mermaid.initialize({
-    startOnLoad: false,
-    theme: newConfig.theme,
-    securityLevel: 'loose',
-    fontFamily: newConfig.fontFamily,
-    fontSize: newConfig.fontSize,
-    logLevel: 'error',
-    flowchart: {
-      curve: newConfig.curve,
-      useMaxWidth: newConfig.useMaxWidth
+    mermaidConfig.value = newConfig;
+
+
+    // Обновление настроек плагина экспорта
+    if (svgExportPlugin.value) {
+        svgExportPlugin.value.updateSettings({
+            background: newConfig.backgroundColor
+        });
     }
-  });
-  
-  // Перерисовка диаграммы с новыми настройками
-  renderDiagram();
+
+    // Обновляем конфигурацию mermaid
+    mermaid.initialize({
+        startOnLoad: false,
+        theme: newConfig.theme,
+        securityLevel: 'loose',
+        fontFamily: newConfig.fontFamily,
+        fontSize: newConfig.fontSize,
+        logLevel: 'error',
+        flowchart: {
+            curve: newConfig.curve,
+            useMaxWidth: newConfig.useMaxWidth
+        }
+    });
+
+    // Перерисовка диаграммы с новыми настройками
+    renderDiagram();
 }
 
 
@@ -165,13 +204,24 @@ onMounted(async () => {
     }
 
     // Уничтожаем плагин подсветки
-  if (highlightPlugin.value) {
-    highlightPlugin.value.destroy();
-  }
+    if (highlightPlugin.value) {
+        highlightPlugin.value.destroy();
+    }
 });
 
 onUnmounted(() => {
     window.removeEventListener('resize', resetView);
+    window.removeEventListener('resize', handleResize);
+
+    // Уничтожаем плагины
+    if (highlightPlugin.value) {
+        highlightPlugin.value.destroy();
+    }
+
+    // Очищаем таймаут уведомления если он активен
+    if (notification.value.timeout) {
+        clearTimeout(notification.value.timeout);
+    }
 });
 
 // Перерисовка при изменении содержимого диаграммы
@@ -233,13 +283,13 @@ function centerDiagram() {
     // Получаем размеры контейнера и диаграммы
     const containerRect = containerRef.value.getBoundingClientRect();
     const diagramRect = diagramRef.value.getBoundingClientRect();
-    
+
     // Вычисляем смещение для центрирования по горизонтали и вертикали
     const containerCenterX = containerRect.width / 2;
     const containerCenterY = containerRect.height / 2;
     const diagramCenterX = diagramRect.width / (2 * scale.value);
     const diagramCenterY = diagramRect.height / (2 * scale.value);
-    
+
     translateX.value = containerCenterX - diagramCenterX;
     translateY.value = containerCenterY - diagramCenterY;
     scale.value = 1
@@ -338,6 +388,8 @@ async function renderDiagram() {
             nodes: [diagramElement]
         });
         initHighlightPlugin();
+
+        initExportPlugin()
         // После рендеринга сбрасываем вид и скрываем индикатор загрузки
         setTimeout(() => {
             resetView();
@@ -352,38 +404,76 @@ async function renderDiagram() {
 
 
 
+// 5. Добавить методы для экспорта:
+function exportAsSvg() {
+    if (!svgExportPlugin.value || !diagramRef.value) return;
+
+    // Показываем индикатор загрузки или уведомление
+    showNotification('Экспорт SVG...');
+
+    // Используем плагин для экспорта SVG
+    svgExportPlugin.value.downloadSvg(diagramRef.value)
+        .then(() => {
+            showNotification('SVG успешно экспортирован', 'success');
+        })
+        .catch(error => {
+            console.error('Ошибка экспорта SVG:', error);
+            showNotification('Ошибка при экспорте SVG', 'error');
+        });
+}
+
+function exportAsPng() {
+    if (!svgExportPlugin.value || !diagramRef.value) return;
+
+    // Показываем индикатор загрузки или уведомление
+    showNotification('Экспорт PNG...');
+
+    // Используем плагин для экспорта PNG
+    svgExportPlugin.value.downloadPng(diagramRef.value)
+        .then(() => {
+            showNotification('PNG успешно экспортирован', 'success');
+        })
+        .catch(error => {
+            console.error('Ошибка экспорта PNG:', error);
+            showNotification('Ошибка при экспорте PNG', 'error');
+        });
+}
+
+
+
+
 
 
 // Инициализация плагина подсветки элементов диаграммы
 function initHighlightPlugin() {
-  // Сначала уничтожаем предыдущий экземпляр, если он существует
-  if (highlightPlugin.value) {
-    highlightPlugin.value.destroy();
-  }
-  
-  // Создаем новый экземпляр плагина с настройками
-  highlightPlugin.value = new HighlightPlugin({
-    highlightColor: mermaidConfig.value.primaryColor || '#ff9900',
-    highlightOpacity: 0.3,
-    pulseEffect: true,
-    tooltips: true,
-    resetOnClickOutside: true,
-    onClick: (element, event) => {
-      // Дополнительная логика при клике на элемент (если нужно)
-      console.log('Выбран элемент:', element);
+    // Сначала уничтожаем предыдущий экземпляр, если он существует
+    if (highlightPlugin.value) {
+        highlightPlugin.value.destroy();
     }
-  });
-  
-  // Инициализируем плагин, указывая контейнер с диаграммой
-  highlightPlugin.value.init(diagramRef.value);
+
+    // Создаем новый экземпляр плагина с настройками
+    highlightPlugin.value = new HighlightPlugin({
+        highlightColor: mermaidConfig.value.primaryColor || '#ff9900',
+        highlightOpacity: 0.3,
+        pulseEffect: true,
+        tooltips: true,
+        resetOnClickOutside: true,
+        onClick: (element, event) => {
+            // Дополнительная логика при клике на элемент (если нужно)
+            console.log('Выбран элемент:', element);
+        }
+    });
+
+    // Инициализируем плагин, указывая контейнер с диаграммой
+    highlightPlugin.value.init(diagramRef.value);
 }
 
 
 
 // Генерация CSS-стилей для SVG на основе пользовательских настроек
 function generateSvgStyles() {
-  const config = mermaidConfig.value;
-  return `
+    const config = mermaidConfig.value;
+    return `
     .mermaid svg {
       background-color: ${config.backgroundColor} !important;
       font-family: ${config.fontFamily} !important;
@@ -414,7 +504,22 @@ function generateSvgStyles() {
 
 
 
+function showNotification(message, type = 'info', duration = 3000) {
+    // Очищаем предыдущий таймаут если есть
+    if (notification.value.timeout) {
+        clearTimeout(notification.value.timeout);
+    }
 
+    // Устанавливаем новое уведомление
+    notification.value = {
+        visible: true,
+        message,
+        type,
+        timeout: setTimeout(() => {
+            notification.value.visible = false;
+        }, duration)
+    };
+}
 
 
 
@@ -433,6 +538,43 @@ function generateSvgStyles() {
 </script>
 
 <style scoped>
+.export-icon {
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.notification {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 10px 20px;
+    border-radius: 4px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    transition: all 0.3s ease;
+    font-size: 14px;
+}
+
+.notification.info {
+    background-color: #2196F3;
+    color: white;
+}
+
+.notification.success {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.notification.error {
+    background-color: #F44336;
+    color: white;
+}
+
+
+
+
+
 .mermaid-viewer-container {
     width: 100%;
     height: 100%;

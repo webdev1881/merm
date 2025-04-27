@@ -1,7 +1,7 @@
 <!-- App.vue -->
 <template>
   <div class="app">
-    <h1>Просмотр Mermaid диаграммы</h1>
+    <h1>SMK диаграммы</h1>
     <div class="viewer-container">
       <MermaidViewer :diagramPath="diagramPath" />
     </div>
