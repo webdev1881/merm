@@ -1,9 +1,20 @@
-<!-- MermaidViewer.vue -->
+<!-- MermaidViewer.vue с селектором типов диаграмм -->
 <template>
     <div class="mermaid-viewer-container">
         <div class="notification" v-if="notification.visible" :class="notification.type">
             {{ notification.message }}
         </div>
+        
+        <!-- Добавлен селектор типов диаграмм -->
+        <div class="diagram-selector">
+            <label for="diagram-type">Тип диаграммы:</label>
+            <select id="diagram-type" v-model="selectedDiagramType" @change="loadSelectedDiagram">
+                <option v-for="diagram in diagramTypes" :key="diagram.id" :value="diagram.id">
+                    {{ diagram.name }}
+                </option>
+            </select>
+        </div>
+        
         <div class="controls">
             <button @click="exportAsSvg" class="control-button" title="Экспорт в SVG">
                 <span class="export-icon">SVG</span>
@@ -55,13 +66,121 @@ import SvgExportPlugin from '@/SvgExportPlugin.js';
 const svgExportPlugin = ref(null);
 
 
-
 const props = defineProps({
     diagramPath: {
         type: String,
         required: true
     }
 });
+
+// Примеры диаграмм разных типов
+const diagramTypes = ref([
+    {
+        id: 'flowchart',
+        name: 'Блок-схема (Flowchart)',
+        code: `flowchart TD
+    A[Начало] --> B{Условие?}
+    B -->|Да| C[Процесс 1]
+    B -->|Нет| D[Процесс 2]
+    C --> E[Конец]
+    D --> E`
+    },
+    {
+        id: 'sequence',
+        name: 'Диаграмма последовательности (Sequence)',
+        code: `sequenceDiagram
+    participant Пользователь
+    participant Система
+    participant База данных
+    Пользователь->>Система: Авторизация
+    Система->>База данных: Проверка данных
+    База данных-->>Система: Результат проверки
+    Система-->>Пользователь: Ответ системы`
+    },
+    {
+        id: 'classDiagram',
+        name: 'Диаграмма классов (Class)',
+        code: `classDiagram
+    class Person {
+        +String name
+        +int age
+        +getDetails()
+    }
+    class Employee {
+        +String position
+        +int salary
+        +work()
+    }
+    class Manager {
+        +List~Employee~ team
+        +assignTask()
+    }
+    Person <|-- Employee
+    Employee <|-- Manager`
+    },
+    {
+        id: 'stateDiagram',
+        name: 'Диаграмма состояний (State)',
+        code: `stateDiagram-v2
+    [*] --> Ожидание
+    Ожидание --> Обработка: Получить запрос
+    Обработка --> Завершено: Успех
+    Обработка --> Ошибка: Сбой
+    Завершено --> Ожидание: Новый запрос
+    Ошибка --> Ожидание: Повторить
+    Ожидание --> [*]: Выключение`
+    },
+    {
+        id: 'entityRelationship',
+        name: 'Диаграмма сущность-связь (ER)',
+        code: `erDiagram
+    CUSTOMER ||--o{ ORDER : размещает
+    ORDER ||--|{ LINE-ITEM : содержит
+    CUSTOMER }|..|{ DELIVERY-ADDRESS : использует`
+    },
+    {
+        id: 'gantt',
+        name: 'Диаграмма Ганта (Gantt)',
+        code: `gantt
+    title График проекта
+    dateFormat YYYY-MM-DD
+    section Планирование
+    Анализ требований  :a1, 2023-01-01, 7d
+    Проектирование     :a2, after a1, 10d
+    section Разработка
+    Реализация         :a3, after a2, 15d
+    Тестирование       :a4, after a3, 7d
+    section Релиз
+    Развертывание      :a5, after a4, 3d`
+    },
+    {
+        id: 'pieChart',
+        name: 'Круговая диаграмма (Pie)',
+        code: `pie
+    title Распределение времени проекта
+    "Разработка" : 40
+    "Тестирование" : 20
+    "Документация" : 15
+    "Встречи" : 15
+    "Прочее" : 10`
+    },
+    {
+        id: 'journey',
+        name: 'Карта взаимодействия (Journey)',
+        code: `journey
+    title Путь пользователя
+    section Регистрация
+      Заполнение формы: 5: Пользователь
+      Подтверждение почты: 3: Пользователь, Система
+    section Использование
+      Авторизация: 5: Пользователь
+      Работа с системой: 4: Пользователь
+      Получение результатов: 5: Пользователь, Система`
+    }
+]);
+
+// Выбранный тип диаграммы
+const selectedDiagramType = ref('flowchart');
 
 // Refs
 const isInitialized = ref(false);
@@ -86,6 +205,16 @@ const notification = ref({
     type: 'info',
     timeout: null
 });
+
+// Загрузка выбранной диаграммы
+function loadSelectedDiagram() {
+    const selectedDiagram = diagramTypes.value.find(d => d.id === selectedDiagramType.value);
+    if (selectedDiagram) {
+        isLoading.value = true;
+        diagramContent.value = selectedDiagram.code;
+        // Перерисовка будет запущена через watch на diagramContent
+    }
+}
 
 // 4. Инициализировать плагин экспорта вместе с плагином подсветки:
 function initExportPlugin() {
@@ -186,11 +315,17 @@ onMounted(async () => {
         containerRef.value.style.cursor = 'grab';
     }
 
-    // Загрузка диаграммы из файла
+    // Загрузка примера диаграммы по умолчанию (вместо загрузки из файла)
     try {
-        const response = await fetch(props.diagramPath);
-        if (!response.ok) throw new Error('Не удалось загрузить диаграмму');
-        diagramContent.value = await response.text();
+        // Если задан путь к файлу, загружаем из него
+        if (props.diagramPath && props.diagramPath !== 'demo') {
+            const response = await fetch(props.diagramPath);
+            if (!response.ok) throw new Error('Не удалось загрузить диаграмму');
+            diagramContent.value = await response.text();
+        } else {
+            // Иначе используем выбранный пример диаграммы
+            loadSelectedDiagram();
+        }
 
         // Рендеринг диаграммы после небольшой задержки для полной инициализации DOM
         setTimeout(() => {
@@ -521,20 +656,6 @@ function showNotification(message, type = 'info', duration = 3000) {
     };
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 </script>
 
 <style scoped>
@@ -571,9 +692,35 @@ function showNotification(message, type = 'info', duration = 3000) {
     color: white;
 }
 
+/* Стили для селектора диаграмм */
+.diagram-selector {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    background-color: white;
+    border-radius: 4px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
 
+.diagram-selector label {
+    font-weight: 500;
+    font-size: 14px;
+    color: #333;
+}
 
-
+.diagram-selector select {
+    padding: 6px 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: white;
+    font-size: 14px;
+    min-width: 200px;
+}
 
 .mermaid-viewer-container {
     width: 100%;
