@@ -143,7 +143,7 @@ export const DIAGRAM_EXAMPLES = {
       title Проект: Разработка веб-приложения
       dateFormat  YYYY-MM-DD
       
-      section Планирование
+      section План
       Анализ требований      :done, a1, 2023-01-01, 7d
       Проектирование         :active, a2, after a1, 10d
       

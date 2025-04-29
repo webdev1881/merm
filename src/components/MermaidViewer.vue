@@ -1,59 +1,59 @@
 <!-- MermaidViewer.vue -->
 <template>
+    <!-- Добавлен селектор типов диаграмм -->
+    <div class="diagram-selector">
+        <label for="diagram-type">Типы диаграмм:</label>
+        <select id="diagram-type" v-model="selectedDiagramType" @change="loadSelectedDiagram">
+            <option v-for="diagram in diagramTypes" :key="diagram.id" :value="diagram.id">
+                {{ diagram.name }}
+            </option>
+        </select>
+    </div>
     <div class="mermaid-viewer-container">
         <div class="notification" v-if="notification.visible" :class="notification.type">
             {{ notification.message }}
         </div>
 
-<!-- Добавлен селектор типов диаграмм -->
-<div class="diagram-selector">
-            <label for="diagram-type">Тип диаграммы:</label>
-            <select id="diagram-type" v-model="selectedDiagramType" @change="loadSelectedDiagram">
-                <option v-for="diagram in diagramTypes" :key="diagram.id" :value="diagram.id">
-                    {{ diagram.name }}
-                </option>
-            </select>
+
+
+        <!-- <button @click="openShareDialog" class="control-button" title="Поделиться диаграммой">
+            <span class="share-icon">🔗</span>
+        </button> -->
+
+
+
+
+        <div class="share-dialog" v-if="shareDialog">
+            <div class="share-dialog-content">
+                <div class="share-dialog-header">
+                    <h3>Поделиться диаграммой</h3>
+                    <button class="close-button" @click="closeShareDialog">✕</button>
+                </div>
+                <div class="share-dialog-body">
+                    <p>Создайте короткую ссылку на вашу диаграмму, чтобы поделиться ею:</p>
+
+                    <div class="share-link-container" v-if="shareLink">
+                        <input type="text" class="share-link-input" v-model="shareLink" readonly />
+                        <button class="copy-button" @click="copyShareLink">
+                            {{ isCopied ? 'Скопировано!' : 'Копировать' }}
+                        </button>
+                    </div>
+
+                    <div class="share-actions">
+                        <button class="generate-link-button" @click="generateShareLink" :disabled="isGeneratingLink">
+                            {{ shareLink ? 'Обновить ссылку' : 'Создать ссылку' }}
+                        </button>
+                        <button class="export-config-button" @click="exportDiagramConfig">
+                            Экспорт в файл
+                        </button>
+                    </div>
+
+                    <div class="share-info">
+                        <p class="note">Примечание: Ссылка будет доступна в течение 30 дней.</p>
+                    </div>
+                </div>
+            </div>
         </div>
-
-
-        <button @click="openShareDialog" class="control-button" title="Поделиться диаграммой">
-  <span class="share-icon">🔗</span>
-</button>
-
-
-
-
-<div class="share-dialog" v-if="shareDialog">
-  <div class="share-dialog-content">
-    <div class="share-dialog-header">
-      <h3>Поделиться диаграммой</h3>
-      <button class="close-button" @click="closeShareDialog">✕</button>
-    </div>
-    <div class="share-dialog-body">
-      <p>Создайте короткую ссылку на вашу диаграмму, чтобы поделиться ею:</p>
-      
-      <div class="share-link-container" v-if="shareLink">
-        <input type="text" class="share-link-input" v-model="shareLink" readonly />
-        <button class="copy-button" @click="copyShareLink">
-          {{ isCopied ? 'Скопировано!' : 'Копировать' }}
-        </button>
-      </div>
-      
-      <div class="share-actions">
-        <button class="generate-link-button" @click="generateShareLink" :disabled="isGeneratingLink">
-          {{ shareLink ? 'Обновить ссылку' : 'Создать ссылку' }}
-        </button>
-        <button class="export-config-button" @click="exportDiagramConfig">
-          Экспорт в файл
-        </button>
-      </div>
-      
-      <div class="share-info">
-        <p class="note">Примечание: Ссылка будет доступна в течение 30 дней.</p>
-      </div>
-    </div>
-  </div>
-</div>
 
 
 
@@ -72,6 +72,9 @@
 
 
         <div class="controls">
+            <button @click="openShareDialog" class="control-button" title="Поделиться диаграммой">
+            <span class="share-icon">🔗</span>
+        </button>
             <button @click="exportAsSvg" class="control-button" title="Экспорт в SVG">
                 <span class="export-icon">SVG</span>
             </button>
@@ -167,7 +170,7 @@ const diagramTypes = ref([
         name: 'Диаграмма классов (Class)',
         code: `classDiagram
     class Person {
-        +String name
+        +String namee
         +int age
         +getDetails()
     }
@@ -209,8 +212,8 @@ const diagramTypes = ref([
         code: `gantt
     title График проекта
     dateFormat YYYY-MM-DD
-    section Планирование
-    Анализ требований  :a1, 2023-01-01, 7d
+    section План
+    Анализ требований  :a1, 2025-01-01, 7d
     Проектирование     :a2, after a1, 10d
     section Разработка
     Реализация         :a3, after a2, 15d
@@ -284,15 +287,15 @@ const mermaidConfig = ref({
 
 // Computed styles
 const transformStyle = computed(() => {
-  return {
-    transform: `translate(${translateX.value}px, ${translateY.value}px) scale(${scale.value})`,
-    transformOrigin: 'center center'
-  };
+    return {
+        transform: `translate(${translateX.value}px, ${translateY.value}px) scale(${scale.value})`,
+        transformOrigin: 'center center'
+    };
 });
 
 // Цвет фона контейнера диаграммы
 const containerBackgroundColor = computed(() => {
-  return mermaidConfig.value.backgroundColor || '#fafafa';
+    return mermaidConfig.value.backgroundColor || '#fafafa';
 });
 
 const notification = ref({
@@ -304,63 +307,63 @@ const notification = ref({
 
 // Открыть диалог с настройками публикации и ссылкой
 function openShareDialog() {
-  shareDialog.value = true;
-  shareLink.value = ''; // Сбрасываем предыдущую ссылку
-  isCopied.value = false;
+    shareDialog.value = true;
+    shareLink.value = ''; // Сбрасываем предыдущую ссылку
+    isCopied.value = false;
 }
 
 // Закрыть диалог публикации
 function closeShareDialog() {
-  shareDialog.value = false;
+    shareDialog.value = false;
 }
 
 
 
 async function generateShareLink() {
-  try {
-    isGeneratingLink.value = true;
-    
-    // Собираем данные для публикации
-    const diagramData = {
-      content: diagramContent.value,
-      config: mermaidConfig.value,
-      type: selectedDiagramType.value,
-      timestamp: new Date().toISOString(),
-      version: '1.0'
-    };
-    
-    // Вариант 1: Используем внешний сервис сокращения ссылок
-    // Можно использовать существующие API для сокращения ссылок (TinyURL, Bitly и т.д.)
-    // или создать собственный сервис на бэкенде
-    
-    // Пример с использованием Firebase Realtime Database или Firestore
-    const uniqueId = (Math.random() + 1).toString(36).substring(7); // Генерируем короткий уникальный ID
-    
-    // Здесь должен быть код для сохранения данных в вашем бэкенде
-    // Примерная структура:
-    /*
-    await firebase.database().ref(`diagrams/${uniqueId}`).set(diagramData);
-    
-    // Или с использованием Firestore
-    await firebase.firestore().collection('diagrams').doc(uniqueId).set(diagramData);
-    */
-    
-    // Вариант 2: Использование localStorage или sessionStorage для демонстрации
-    // Этот вариант подойдет для демонстрации или при отсутствии бэкенда
-    localStorage.setItem(`mermaid-diagram-${uniqueId}`, JSON.stringify(diagramData));
-    
-    // Формирование короткой ссылки
-    const baseUrl = window.location.origin + window.location.pathname;
-    shareLink.value = `${baseUrl}?diagram=${uniqueId}`;
-    
-    // Показываем уведомление об успешной генерации ссылки
-    showNotification('Короткая ссылка на диаграмму успешно создана!', 'success');
-  } catch (error) {
-    console.error('Ошибка при генерации ссылки:', error);
-    showNotification('Ошибка при создании ссылки на диаграмму', 'error');
-  } finally {
-    isGeneratingLink.value = false;
-  }
+    try {
+        isGeneratingLink.value = true;
+
+        // Собираем данные для публикации
+        const diagramData = {
+            content: diagramContent.value,
+            config: mermaidConfig.value,
+            type: selectedDiagramType.value,
+            timestamp: new Date().toISOString(),
+            version: '1.0'
+        };
+
+        // Вариант 1: Используем внешний сервис сокращения ссылок
+        // Можно использовать существующие API для сокращения ссылок (TinyURL, Bitly и т.д.)
+        // или создать собственный сервис на бэкенде
+
+        // Пример с использованием Firebase Realtime Database или Firestore
+        const uniqueId = (Math.random() + 1).toString(36).substring(7); // Генерируем короткий уникальный ID
+
+        // Здесь должен быть код для сохранения данных в вашем бэкенде
+        // Примерная структура:
+        /*
+        await firebase.database().ref(`diagrams/${uniqueId}`).set(diagramData);
+        
+        // Или с использованием Firestore
+        await firebase.firestore().collection('diagrams').doc(uniqueId).set(diagramData);
+        */
+
+        // Вариант 2: Использование localStorage или sessionStorage для демонстрации
+        // Этот вариант подойдет для демонстрации или при отсутствии бэкенда
+        localStorage.setItem(`mermaid-diagram-${uniqueId}`, JSON.stringify(diagramData));
+
+        // Формирование короткой ссылки
+        const baseUrl = window.location.origin + window.location.pathname;
+        shareLink.value = `${baseUrl}?diagram=${uniqueId}`;
+
+        // Показываем уведомление об успешной генерации ссылки
+        showNotification('Короткая ссылка на диаграмму успешно создана!', 'success');
+    } catch (error) {
+        console.error('Ошибка при генерации ссылки:', error);
+        showNotification('Ошибка при создании ссылки на диаграмму', 'error');
+    } finally {
+        isGeneratingLink.value = false;
+    }
 }
 
 // Загрузка выбранной диаграммы
@@ -374,85 +377,85 @@ function loadSelectedDiagram() {
 }
 
 function copyShareLink() {
-  if (!shareLink.value) return;
-  
-  navigator.clipboard.writeText(shareLink.value)
-    .then(() => {
-      isCopied.value = true;
-      showNotification('Ссылка скопирована в буфер обмена', 'success');
-      
-      // Сбрасываем индикатор копирования через 2 секунды
-      setTimeout(() => {
-        isCopied.value = false;
-      }, 2000);
-    })
-    .catch(error => {
-      console.error('Ошибка при копировании ссылки:', error);
-      showNotification('Не удалось скопировать ссылку', 'error');
-    });
+    if (!shareLink.value) return;
+
+    navigator.clipboard.writeText(shareLink.value)
+        .then(() => {
+            isCopied.value = true;
+            showNotification('Ссылка скопирована в буфер обмена', 'success');
+
+            // Сбрасываем индикатор копирования через 2 секунды
+            setTimeout(() => {
+                isCopied.value = false;
+            }, 2000);
+        })
+        .catch(error => {
+            console.error('Ошибка при копировании ссылки:', error);
+            showNotification('Не удалось скопировать ссылку', 'error');
+        });
 }
 
 // Экспорт диаграммы с настройками в файл (для резервного копирования)
 function exportDiagramConfig() {
-  const diagramData = {
-    content: diagramContent.value,
-    config: mermaidConfig.value,
-    type: selectedDiagramType.value,
-    timestamp: new Date().toISOString(),
-    version: '1.0'
-  };
-  
-  const blob = new Blob([JSON.stringify(diagramData, null, 2)], { type: 'application/json' });
-//   saveAs(blob, `mermaid-diagram-${new Date().toISOString().slice(0, 10)}.json`);
-  
-//   showNotification('Конфигурация диаграммы экспортирована в файл', 'success');
+    const diagramData = {
+        content: diagramContent.value,
+        config: mermaidConfig.value,
+        type: selectedDiagramType.value,
+        timestamp: new Date().toISOString(),
+        version: '1.0'
+    };
+
+    const blob = new Blob([JSON.stringify(diagramData, null, 2)], { type: 'application/json' });
+    //   saveAs(blob, `mermaid-diagram-${new Date().toISOString().slice(0, 10)}.json`);
+
+    //   showNotification('Конфигурация диаграммы экспортирована в файл', 'success');
 }
 
 // 4. Добавьте функцию для загрузки диаграммы по ID из URL
 async function loadDiagramFromId(diagramId) {
-  try {
-    // Показываем индикатор загрузки
-    isLoading.value = true;
-    
-    // Вариант 1: Загрузка с бэкенда
-    /*
-    // Получаем данные диаграммы из Firebase или другого бэкенда
-    const snapshot = await firebase.database().ref(`diagrams/${diagramId}`).once('value');
-    const diagramData = snapshot.val();
-    
-    // Или с использованием Firestore
-    const doc = await firebase.firestore().collection('diagrams').doc(diagramId).get();
-    const diagramData = doc.data();
-    */
-    
-    // Вариант 2: Загрузка из localStorage (для демонстрации)
-    const storedData = localStorage.getItem(`mermaid-diagram-${diagramId}`);
-    
-    if (!storedData) {
-      showNotification('Диаграмма не найдена или срок ее хранения истек', 'error');
-      return;
+    try {
+        // Показываем индикатор загрузки
+        isLoading.value = true;
+
+        // Вариант 1: Загрузка с бэкенда
+        /*
+        // Получаем данные диаграммы из Firebase или другого бэкенда
+        const snapshot = await firebase.database().ref(`diagrams/${diagramId}`).once('value');
+        const diagramData = snapshot.val();
+        
+        // Или с использованием Firestore
+        const doc = await firebase.firestore().collection('diagrams').doc(diagramId).get();
+        const diagramData = doc.data();
+        */
+
+        // Вариант 2: Загрузка из localStorage (для демонстрации)
+        const storedData = localStorage.getItem(`mermaid-diagram-${diagramId}`);
+
+        if (!storedData) {
+            showNotification('Диаграмма не найдена или срок ее хранения истек', 'error');
+            return;
+        }
+
+        const diagramData = JSON.parse(storedData);
+
+        // Устанавливаем загруженные данные
+        if (diagramData.type && diagramTypes.value.find(d => d.id === diagramData.type)) {
+            selectedDiagramType.value = diagramData.type;
+        }
+
+        diagramContent.value = diagramData.content;
+
+        if (diagramData.config) {
+            updateMermaidConfig(diagramData.config);
+        }
+
+        showNotification('Диаграмма успешно загружена', 'success');
+    } catch (error) {
+        console.error('Ошибка при загрузке диаграммы:', error);
+        showNotification('Ошибка при загрузке диаграммы', 'error');
+    } finally {
+        isLoading.value = false;
     }
-    
-    const diagramData = JSON.parse(storedData);
-    
-    // Устанавливаем загруженные данные
-    if (diagramData.type && diagramTypes.value.find(d => d.id === diagramData.type)) {
-      selectedDiagramType.value = diagramData.type;
-    }
-    
-    diagramContent.value = diagramData.content;
-    
-    if (diagramData.config) {
-      updateMermaidConfig(diagramData.config);
-    }
-    
-    showNotification('Диаграмма успешно загружена', 'success');
-  } catch (error) {
-    console.error('Ошибка при загрузке диаграммы:', error);
-    showNotification('Ошибка при загрузке диаграммы', 'error');
-  } finally {
-    isLoading.value = false;
-  }
 }
 
 
@@ -538,7 +541,7 @@ onMounted(async () => {
         containerRef.value.style.cursor = 'grab';
     }
 
-       // Загрузка примера диаграммы по умолчанию (вместо загрузки из файла)
+    // Загрузка примера диаграммы по умолчанию (вместо загрузки из файла)
     try {
         // Если задан путь к файлу, загружаем из него
         if (props.diagramPath && props.diagramPath !== 'demo') {
@@ -567,15 +570,15 @@ onMounted(async () => {
     }
 
 
-     // Проверяем URL на наличие параметра diagram
-  const urlParams = new URLSearchParams(window.location.search);
-  const diagramId = urlParams.get('diagram');
-  
-  if (diagramId) {
-    await loadDiagramFromId(diagramId);
-  } else {
+    // Проверяем URL на наличие параметра diagram
+    const urlParams = new URLSearchParams(window.location.search);
+    const diagramId = urlParams.get('diagram');
 
-  }
+    if (diagramId) {
+        await loadDiagramFromId(diagramId);
+    } else {
+
+    }
 
 
 
@@ -944,11 +947,6 @@ function showNotification(message, type = 'info', duration = 3000) {
 </script>
 
 <style scoped>
-
-
-
-
-
 .export-icon {
     font-size: 12px;
     font-weight: bold;
@@ -1150,5 +1148,128 @@ function showNotification(message, type = 'info', duration = 3000) {
 .control-button:active {
     transform: translateY(0);
     box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
+}
+
+
+
+
+/* Стили для диалога публикации */
+.share-dialog {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1100;
+}
+
+.share-dialog-content {
+    background-color: white;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+}
+
+.share-dialog-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    border-bottom: 1px solid #eee;
+}
+
+.share-dialog-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.share-dialog-body {
+    padding: 20px;
+}
+
+.share-link-container {
+    display: flex;
+    margin: 15px 0;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.share-link-input {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    font-size: 14px;
+    background-color: #f8f8f8;
+}
+
+.copy-button {
+    padding: 10px 15px;
+    background-color: #2196F3;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.copy-button:hover {
+    background-color: #0b7dda;
+}
+
+.share-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.generate-link-button, .export-config-button {
+    flex: 1;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.generate-link-button {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.generate-link-button:hover {
+    background-color: #45a049;
+}
+
+.generate-link-button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+.export-config-button {
+    background-color: #f0f0f0;
+    color: #333;
+}
+
+.export-config-button:hover {
+    background-color: #e0e0e0;
+}
+
+.share-info {
+    margin-top: 20px;
+}
+
+.note {
+    font-size: 12px;
+    color: #666;
+    margin: 0;
 }
 </style>
