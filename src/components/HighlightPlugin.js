@@ -65,7 +65,6 @@ export class HighlightPlugin {
         const style = document.createElement('style');
         style.id = 'mermaid-highlight-plugin-styles';
         style.textContent = `
-        color: red;
         @keyframes highlight-pulse {
           0% { opacity: ${this.settings.highlightOpacity}; }
           50% { opacity: ${this.settings.highlightOpacity * 0.7}; }
