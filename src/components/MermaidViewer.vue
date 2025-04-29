@@ -26,11 +26,10 @@
         <div class="share-dialog" v-if="shareDialog">
             <div class="share-dialog-content">
                 <div class="share-dialog-header">
-                    <h3>Поделиться диаграммой</h3>
+                    <h3>Создать короткую ссылку</h3>
                     <button class="close-button" @click="closeShareDialog">✕</button>
                 </div>
                 <div class="share-dialog-body">
-                    <p>Создайте короткую ссылку на вашу диаграмму, чтобы поделиться ею:</p>
 
                     <div class="share-link-container" v-if="shareLink">
                         <input type="text" class="share-link-input" v-model="shareLink" readonly />
@@ -49,7 +48,7 @@
                     </div>
 
                     <div class="share-info">
-                        <p class="note">Примечание: Ссылка будет доступна в течение 30 дней.</p>
+                        <p class="note">Примечание: Ссылка будет доступна в Odoo.</p>
                     </div>
                 </div>
             </div>
@@ -92,9 +91,9 @@
         </div>
         <div ref="containerRef" class="diagram-container" @wheel.prevent="handleWheel" @mousedown="startDrag"
             @mouseup="stopDrag" @mouseleave="stopDrag" @mousemove="onDrag">
-            <!-- <div class="loading-overlay" v-if="isLoading">
+            <div class="loading-overlay" v-if="isLoading">
                 <div class="loading-spinner"></div>
-            </div> -->
+            </div>
             <div ref="diagramRef" class="mermaid-diagram"
                 :class="{ 'low-quality': !isHighQuality && isDragging, 'hidden': isLoading }" :style="transformStyle">
             </div>
@@ -1177,6 +1176,7 @@ function showNotification(message, type = 'info', duration = 3000) {
 }
 
 .share-dialog-header {
+    color: black;
     display: flex;
     justify-content: space-between;
     align-items: center;

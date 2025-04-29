@@ -332,8 +332,8 @@ export class SvgExportPlugin {
       
       // Создаем текстовый элемент
       const textElement = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-      textElement.setAttribute('x', svgWidth - 10);
-      textElement.setAttribute('y', svgHeight - 10);
+      textElement.setAttribute('x', svgWidth / 2);
+      textElement.setAttribute('y', svgHeight / 2);;
       textElement.setAttribute('text-anchor', 'end');
       textElement.setAttribute('font-family', 'Arial, sans-serif');
       textElement.setAttribute('font-size', '12px');
