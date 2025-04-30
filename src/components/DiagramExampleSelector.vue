@@ -49,7 +49,8 @@
   const props = defineProps({
     initialExampleId: {
       type: String,
-      default: 'flowchart'
+      default: 'ТИП'
+      // default: 'flowchart'
     }
   });
   
@@ -59,7 +60,7 @@
   const examplesList = ref([]);
   
   // ID выбранного примера
-  const selectedExampleId = ref(props.initialExampleId);
+  const selectedExampleId = ref(null);
   
   // Текущий выбранный пример
   const currentExample = computed(() => {

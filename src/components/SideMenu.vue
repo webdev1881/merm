@@ -2,7 +2,7 @@
 <template>
     <div class="side-menu" :class="{ 'open': isOpen }" :style="menuStyle">
       <div class="side-menu-header">
-        <h2>Настройки диаграммы</h2>
+        <h2 style="color:black" >Настройки диаграммы</h2>
         <button class="close-button" @click="close">✕</button>
       </div>
       

@@ -150,16 +150,6 @@ const props = defineProps({
 // Примеры диаграмм разных типов
 const diagramTypes = ref([
     {
-        id: 'flowchart',
-        name: 'Блок-схема (Flowchart)',
-        code: `flowchart TD
-    A[Начало] --> B{Условие?}
-    B -->|Да| C[Процесс 1]
-    B -->|Нет| D[Процесс 2]
-    C --> E[Конец]
-    D --> E`
-    },
-    {
         id: 'sequence',
         name: 'Диаграмма последовательности (Sequence)',
         code: `sequenceDiagram
@@ -172,9 +162,34 @@ const diagramTypes = ref([
     Система-->>Пользователь: Ответ системы`
     },
     {
+        id: 'flowchart',
+        name: 'Блок-схема (Flowchart)',
+        code: `flowchart TD
+    A[Начало] --> B{Условие?}
+    B -->|Да| C[Процесс 1]
+    B -->|Нет| D[Процесс 2]
+    B -->|Да| X[Процесс 1]
+    B -->|Нет| Y[Процесс 2]
+    B -->|Нет| Z[Процесс 2]
+    C --> E[Конец]
+    D --> E`
+    },
+    {
         id: 'classDiagram',
         name: 'Диаграмма классов (Class)',
         code: `classDiagram
+    class Manager0 {
+        +List~Employee~ team
+        +assignTask()
+    }
+    class Manager4 {
+        +List~Employee~ team
+        +assignTask()
+    }
+    class Manager5 {
+        +List~Employee~ team
+        +assignTask()
+    }
     class Person {
         +String namee
         +int age
@@ -189,8 +204,22 @@ const diagramTypes = ref([
         +List~Employee~ team
         +assignTask()
     }
+    class Manager2 {
+        +List~Employee~ team
+        +assignTask()
+    }
+    class Manager3 {
+        +List~Employee~ team
+        +assignTask()
+    }
     Person <|-- Employee
-    Employee <|-- Manager`
+    Employee <|-- Manager
+    Person <|-- Manager2
+    Person <|-- Manager3
+    Employee <|-- Manager4
+    Employee <|-- Manager5
+    Employee <|-- Manager0
+    `
     },
     {
         id: 'stateDiagram',
@@ -200,6 +229,10 @@ const diagramTypes = ref([
     Ожидание --> Обработка: Получить запрос
     Обработка --> Завершено: Успех
     Обработка --> Ошибка: Сбой
+    Обработка2 --> Состояние: Сбой
+    Обработка3 --> Состояние: Сбой
+    Обработка4 --> Состояние: Сбой
+    Обработка5 --> Состояние: Сбой
     Завершено --> Ожидание: Новый запрос
     Ошибка --> Ожидание: Повторить
     Ожидание --> [*]: Выключение`
@@ -359,17 +392,17 @@ const diagramTypes = ref([
         code: `journey
     title Путь пользователя
     section Регистрация
-      Заполнение формы: 5: Пользователь
-      Подтверждение почты: 3: Пользователь, Система
+      Заполнение формы: 5: Юзер
+      Подтверждение почты: 3: Юзер, Система
     section Использование
-      Авторизация: 5: Пользователь
-      Работа с системой: 4: Пользователь
-      Получение результатов: 5: Пользователь, Система`
+      Авторизация: 5: Юзер
+      Работа с системой: 4: Юзер
+      Получение результатов: 5: Юзер, Система`
     }
 ]);
 
 // Выбранный тип диаграммы
-const selectedDiagramType = ref('flowchart');
+const selectedDiagramType = ref('sequence');
 
 
 // Refs
@@ -599,9 +632,13 @@ function initExportPlugin() {
 
 
 
-function updateDiagramCode(newCode) {
+async function updateDiagramCode(newCode) {
     diagramContent.value = newCode;
-    renderDiagram();
+    // await renderDiagram();
+    setTimeout(() => {
+         renderDiagram();
+        
+    }, 100);
 }
 
 // Открыть/закрыть боковое меню
