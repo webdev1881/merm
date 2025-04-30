@@ -82,13 +82,13 @@
             </button>
             <button @click="zoomIn" class="control-button" title="Увеличить">+</button>
             <button @click="zoomOut" class="control-button" title="Уменьшить">-</button>
-            <button @click="centerDiagram" class="control-button" title="Сбросить вид">↻</button>
+            <button @click="centerDiagram" class="control-button reloader" title="Сбросить вид">↻</button>
             <button @click="toggleQuality" class="control-button"
-                :title="isHighQuality ? 'Переключить на низкое качество' : 'Переключить на высокое качество'">
-                {{ isHighQuality ? 'HQ' : 'LQ' }}
-            </button>
-            <button @click="toggleMenu" class="control-button menu-button" title="Настройки диаграммы">⚙️</button>
-        </div>
+            :title="isHighQuality ? 'Переключить на низкое качество' : 'Переключить на высокое качество'">
+            {{ isHighQuality ? 'HQ' : 'LQ' }}
+        </button>
+        <button @click="toggleMenu" class="control-button menu-button" title="Настройки диаграммы">⚙️</button>
+    </div>
         <div ref="containerRef" class="diagram-container" @wheel.prevent="handleWheel" @mousedown="startDrag"
             @mouseup="stopDrag" @mouseleave="stopDrag" @mousemove="onDrag">
             <div class="loading-overlay" v-if="isLoading">
@@ -528,6 +528,10 @@ function loadSelectedDiagram() {
         diagramContent.value = selectedDiagram.code;
         // Перерисовка будет запущена через watch на diagramContent
     }
+    setTimeout(() => {
+        
+        centerDiagram();
+    }, 100);
 }
 
 function copyShareLink() {
@@ -1430,5 +1434,8 @@ function showNotification(message, type = 'info', duration = 3000) {
     font-size: 12px;
     color: #666;
     margin: 0;
+}
+.reloader {
+    border: 1px solid black;
 }
 </style>
