@@ -1,10 +1,79 @@
 <!-- MermaidViewer.vue -->
 <template>
+    <!-- Добавлен селектор типов диаграмм -->
+    <div class="diagram-selector">
+        <label for="diagram-type">Типы диаграмм:</label>
+        <select id="diagram-type" v-model="selectedDiagramType" @change="loadSelectedDiagram">
+            <option v-for="diagram in diagramTypes" :key="diagram.id" :value="diagram.id">
+                {{ diagram.name }}
+            </option>
+        </select>
+    </div>
     <div class="mermaid-viewer-container">
         <div class="notification" v-if="notification.visible" :class="notification.type">
             {{ notification.message }}
         </div>
+
+
+
+        <!-- <button @click="openShareDialog" class="control-button" title="Поделиться диаграммой">
+            <span class="share-icon">🔗</span>
+        </button> -->
+
+
+
+
+        <div class="share-dialog" v-if="shareDialog">
+            <div class="share-dialog-content">
+                <div class="share-dialog-header">
+                    <h3>Создать короткую ссылку</h3>
+                    <button class="close-button" @click="closeShareDialog">✕</button>
+                </div>
+                <div class="share-dialog-body">
+
+                    <div class="share-link-container" v-if="shareLink">
+                        <input type="text" class="share-link-input" v-model="shareLink" readonly />
+                        <button class="copy-button" @click="copyShareLink">
+                            {{ isCopied ? 'Скопировано!' : 'Копировать' }}
+                        </button>
+                    </div>
+
+                    <div class="share-actions">
+                        <button class="generate-link-button" @click="generateShareLink" :disabled="isGeneratingLink">
+                            {{ shareLink ? 'Обновить ссылку' : 'Создать ссылку' }}
+                        </button>
+                        <button class="export-config-button" @click="exportDiagramConfig">
+                            Экспорт в файл
+                        </button>
+                    </div>
+
+                    <div class="share-info">
+                        <p class="note">Примечание: Ссылка будет доступна в Odoo.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         <div class="controls">
+            <button @click="openShareDialog" class="control-button" title="Поделиться диаграммой">
+            <span class="share-icon">🔗</span>
+        </button>
             <button @click="exportAsSvg" class="control-button" title="Экспорт в SVG">
                 <span class="export-icon">SVG</span>
             </button>
@@ -22,9 +91,9 @@
         </div>
         <div ref="containerRef" class="diagram-container" @wheel.prevent="handleWheel" @mousedown="startDrag"
             @mouseup="stopDrag" @mouseleave="stopDrag" @mousemove="onDrag">
-            <!-- <div class="loading-overlay" v-if="isLoading">
+            <div class="loading-overlay" v-if="isLoading">
                 <div class="loading-spinner"></div>
-            </div> -->
+            </div>
             <div ref="diagramRef" class="mermaid-diagram"
                 :class="{ 'low-quality': !isHighQuality && isDragging, 'hidden': isLoading }" :style="transformStyle">
             </div>
@@ -55,6 +124,14 @@ import SvgExportPlugin from '@/SvgExportPlugin.js';
 const svgExportPlugin = ref(null);
 
 
+// 2. Добавьте следующие ref-переменные в компонент
+const shareDialog = ref(false); // Состояние диалога с короткой ссылкой
+const shareLink = ref(''); // Короткая ссылка для публикации
+const isCopied = ref(false); // Состояние копирования ссылки
+const isGeneratingLink = ref(false); // Состояние генерации ссылки
+
+
+
 
 const props = defineProps({
     diagramPath: {
@@ -62,6 +139,231 @@ const props = defineProps({
         required: true
     }
 });
+
+// Примеры диаграмм разных типов
+const diagramTypes = ref([
+    {
+        id: 'flowchart',
+        name: 'Блок-схема (Flowchart)',
+        code: `flowchart TD
+    A[Начало] --> B{Условие?}
+    B -->|Да| C[Процесс 1]
+    B -->|Нет| D[Процесс 2]
+    C --> E[Конец]
+    D --> E`
+    },
+    {
+        id: 'sequence',
+        name: 'Диаграмма последовательности (Sequence)',
+        code: `sequenceDiagram
+    participant Пользователь
+    participant Система
+    participant База данных
+    Пользователь->>Система: Авторизация
+    Система->>База данных: Проверка данных
+    База данных-->>Система: Результат проверки
+    Система-->>Пользователь: Ответ системы`
+    },
+    {
+        id: 'classDiagram',
+        name: 'Диаграмма классов (Class)',
+        code: `classDiagram
+    class Person {
+        +String namee
+        +int age
+        +getDetails()
+    }
+    class Employee {
+        +String position
+        +int salary
+        +work()
+    }
+    class Manager {
+        +List~Employee~ team
+        +assignTask()
+    }
+    Person <|-- Employee
+    Employee <|-- Manager`
+    },
+    {
+        id: 'stateDiagram',
+        name: 'Диаграмма состояний (State)',
+        code: `stateDiagram-v2
+    [*] --> Ожидание
+    Ожидание --> Обработка: Получить запрос
+    Обработка --> Завершено: Успех
+    Обработка --> Ошибка: Сбой
+    Завершено --> Ожидание: Новый запрос
+    Ошибка --> Ожидание: Повторить
+    Ожидание --> [*]: Выключение`
+    },
+    {
+        id: 'entityRelationship',
+        name: 'Диаграмма сущность-связь (ER)',
+        code: `erDiagram
+    СТУДЕНТ {
+        int студент_id PK
+        string имя
+        string фамилия
+        date дата_рождения
+        string адрес
+        string телефон
+        string email
+        int группа_id FK
+    }
+    
+    ПРЕПОДАВАТЕЛЬ {
+        int преподаватель_id PK
+        string имя
+        string фамилия
+        string степень
+        string должность
+        date дата_найма
+        string кафедра
+        string телефон
+        string email
+    }
+    
+    КУРС {
+        int курс_id PK
+        string название
+        string код_курса
+        int кредиты
+        string описание
+        int кафедра_id FK
+    }
+    
+    ГРУППА {
+        int группа_id PK
+        string название_группы
+        int факультет_id FK
+        int год_поступления
+    }
+    
+    ФАКУЛЬТЕТ {
+        int факультет_id PK
+        string название_факультета
+        string аббревиатура
+        int декан_id FK
+    }
+    
+    КАФЕДРА {
+        int кафедра_id PK
+        string название_кафедры
+        int факультет_id FK
+        int заведующий_id FK
+    }
+    
+    АУДИТОРИЯ {
+        int аудитория_id PK
+        string номер_аудитории
+        string здание
+        int вместимость
+        string тип_аудитории
+    }
+    
+    РАСПИСАНИЕ {
+        int расписание_id PK
+        int курс_id FK
+        int преподаватель_id FK
+        int аудитория_id FK
+        int группа_id FK
+        date дата
+        time время_начала
+        time время_окончания
+        string день_недели
+    }
+    
+    ОЦЕНКА {
+        int оценка_id PK
+        int студент_id FK
+        int курс_id FK
+        int преподаватель_id FK
+        date дата_оценки
+        int балл
+        string тип_оценки
+    }
+    
+    БИБЛИОТЕКА_РЕСУРС {
+        int ресурс_id PK
+        string название
+        string тип_ресурса
+        string автор
+        date дата_публикации
+        string издательство
+        int количество_копий
+    }
+    
+    ВЫДАЧА_РЕСУРСА {
+        int выдача_id PK
+        int студент_id FK
+        int ресурс_id FK
+        date дата_выдачи
+        date дата_возврата
+        string статус
+    }
+    
+    СТУДЕНТ ||--o{ ОЦЕНКА : "получает"
+    СТУДЕНТ }|--|| ГРУППА : "входит в"
+    ГРУППА }|--|| ФАКУЛЬТЕТ : "относится к"
+    ПРЕПОДАВАТЕЛЬ ||--o{ ОЦЕНКА : "выставляет"
+    ПРЕПОДАВАТЕЛЬ ||--o{ РАСПИСАНИЕ : "ведет занятия"
+    ПРЕПОДАВАТЕЛЬ |o--|| КАФЕДРА : "работает на"
+    КУРС ||--o{ ОЦЕНКА : "оценивается"
+    КУРС ||--o{ РАСПИСАНИЕ : "проводится"
+    КУРС }|--|| КАФЕДРА : "относится к"
+    АУДИТОРИЯ ||--o{ РАСПИСАНИЕ : "используется для"
+    ГРУППА ||--o{ РАСПИСАНИЕ : "посещает занятия"
+    ФАКУЛЬТЕТ ||--o{ КАФЕДРА : "содержит"
+    ПРЕПОДАВАТЕЛЬ |o--o| ФАКУЛЬТЕТ : "является деканом"
+    ПРЕПОДАВАТЕЛЬ |o--o| КАФЕДРА : "является заведующим"
+    СТУДЕНТ ||--o{ ВЫДАЧА_РЕСУРСА : "берет"
+    БИБЛИОТЕКА_РЕСУРС ||--o{ ВЫДАЧА_РЕСУРСА : "выдается"`
+    },
+    {
+        id: 'gantt',
+        name: 'Диаграмма Ганта (Gantt)',
+        code: `gantt
+    title График проекта
+    dateFormat YYYY-MM-DD
+    section План
+    Анализ требований  :a1, 2025-01-01, 7d
+    Проектирование     :a2, after a1, 10d
+    section Разработка
+    Реализация         :a3, after a2, 15d
+    Тестирование       :a4, after a3, 7d
+    section Релиз
+    Развертывание      :a5, after a4, 3d`
+    },
+    {
+        id: 'pieChart',
+        name: 'Круговая диаграмма (Pie)',
+        code: `pie
+    title Распределение времени проекта
+    "Разработка" : 40
+    "Тестирование" : 20
+    "Документация" : 15
+    "Встречи" : 15
+    "Прочее" : 10`
+    },
+    {
+        id: 'journey',
+        name: 'Карта взаимодействия (Journey)',
+        code: `journey
+    title Путь пользователя
+    section Регистрация
+      Заполнение формы: 5: Пользователь
+      Подтверждение почты: 3: Пользователь, Система
+    section Использование
+      Авторизация: 5: Пользователь
+      Работа с системой: 4: Пользователь
+      Получение результатов: 5: Пользователь, Система`
+    }
+]);
+
+// Выбранный тип диаграммы
+const selectedDiagramType = ref('flowchart');
+
 
 // Refs
 const isInitialized = ref(false);
@@ -80,24 +382,6 @@ const diagramContent = ref('');
 const isHighQuality = ref(false); // По умолчанию высокое качество
 const isLoading = ref(true); // Добавляем состояние загрузки
 
-const notification = ref({
-    visible: false,
-    message: '',
-    type: 'info',
-    timeout: null
-});
-
-// 4. Инициализировать плагин экспорта вместе с плагином подсветки:
-function initExportPlugin() {
-    // Создаем экземпляр плагина экспорта с настройками
-    svgExportPlugin.value = new SvgExportPlugin({
-        fileName: 'mermaid-diagram',
-        background: mermaidConfig.value.backgroundColor,
-        addWatermark: false,
-        includeStyles: true,
-        scale: 2 // Масштаб для PNG экспорта
-    });
-}
 
 
 // Настройки mermaid
@@ -122,6 +406,191 @@ const transformStyle = computed(() => {
         transformOrigin: 'center center'
     };
 });
+
+// Цвет фона контейнера диаграммы
+const containerBackgroundColor = computed(() => {
+    return mermaidConfig.value.backgroundColor || '#fafafa';
+});
+
+const notification = ref({
+    visible: false,
+    message: '',
+    type: 'info',
+    timeout: null
+});
+
+// Открыть диалог с настройками публикации и ссылкой
+function openShareDialog() {
+    shareDialog.value = true;
+    shareLink.value = ''; // Сбрасываем предыдущую ссылку
+    isCopied.value = false;
+}
+
+// Закрыть диалог публикации
+function closeShareDialog() {
+    shareDialog.value = false;
+}
+
+
+
+async function generateShareLink() {
+    try {
+        isGeneratingLink.value = true;
+
+        // Собираем данные для публикации
+        const diagramData = {
+            content: diagramContent.value,
+            config: mermaidConfig.value,
+            type: selectedDiagramType.value,
+            timestamp: new Date().toISOString(),
+            version: '1.0'
+        };
+
+        // Вариант 1: Используем внешний сервис сокращения ссылок
+        // Можно использовать существующие API для сокращения ссылок (TinyURL, Bitly и т.д.)
+        // или создать собственный сервис на бэкенде
+
+        // Пример с использованием Firebase Realtime Database или Firestore
+        const uniqueId = (Math.random() + 1).toString(36).substring(7); // Генерируем короткий уникальный ID
+
+        // Здесь должен быть код для сохранения данных в вашем бэкенде
+        // Примерная структура:
+        /*
+        await firebase.database().ref(`diagrams/${uniqueId}`).set(diagramData);
+        
+        // Или с использованием Firestore
+        await firebase.firestore().collection('diagrams').doc(uniqueId).set(diagramData);
+        */
+
+        // Вариант 2: Использование localStorage или sessionStorage для демонстрации
+        // Этот вариант подойдет для демонстрации или при отсутствии бэкенда
+        localStorage.setItem(`mermaid-diagram-${uniqueId}`, JSON.stringify(diagramData));
+
+        // Формирование короткой ссылки
+        const baseUrl = window.location.origin + window.location.pathname;
+        shareLink.value = `${baseUrl}?diagram=${uniqueId}`;
+
+        // Показываем уведомление об успешной генерации ссылки
+        showNotification('Короткая ссылка на диаграмму успешно создана!', 'success');
+    } catch (error) {
+        console.error('Ошибка при генерации ссылки:', error);
+        showNotification('Ошибка при создании ссылки на диаграмму', 'error');
+    } finally {
+        isGeneratingLink.value = false;
+    }
+}
+
+// Загрузка выбранной диаграммы
+function loadSelectedDiagram() {
+    const selectedDiagram = diagramTypes.value.find(d => d.id === selectedDiagramType.value);
+    if (selectedDiagram) {
+        isLoading.value = true;
+        diagramContent.value = selectedDiagram.code;
+        // Перерисовка будет запущена через watch на diagramContent
+    }
+}
+
+function copyShareLink() {
+    if (!shareLink.value) return;
+
+    navigator.clipboard.writeText(shareLink.value)
+        .then(() => {
+            isCopied.value = true;
+            showNotification('Ссылка скопирована в буфер обмена', 'success');
+
+            // Сбрасываем индикатор копирования через 2 секунды
+            setTimeout(() => {
+                isCopied.value = false;
+            }, 2000);
+        })
+        .catch(error => {
+            console.error('Ошибка при копировании ссылки:', error);
+            showNotification('Не удалось скопировать ссылку', 'error');
+        });
+}
+
+// Экспорт диаграммы с настройками в файл (для резервного копирования)
+function exportDiagramConfig() {
+    const diagramData = {
+        content: diagramContent.value,
+        config: mermaidConfig.value,
+        type: selectedDiagramType.value,
+        timestamp: new Date().toISOString(),
+        version: '1.0'
+    };
+
+    const blob = new Blob([JSON.stringify(diagramData, null, 2)], { type: 'application/json' });
+    //   saveAs(blob, `mermaid-diagram-${new Date().toISOString().slice(0, 10)}.json`);
+
+    //   showNotification('Конфигурация диаграммы экспортирована в файл', 'success');
+}
+
+// 4. Добавьте функцию для загрузки диаграммы по ID из URL
+async function loadDiagramFromId(diagramId) {
+    try {
+        // Показываем индикатор загрузки
+        isLoading.value = true;
+
+        // Вариант 1: Загрузка с бэкенда
+        /*
+        // Получаем данные диаграммы из Firebase или другого бэкенда
+        const snapshot = await firebase.database().ref(`diagrams/${diagramId}`).once('value');
+        const diagramData = snapshot.val();
+        
+        // Или с использованием Firestore
+        const doc = await firebase.firestore().collection('diagrams').doc(diagramId).get();
+        const diagramData = doc.data();
+        */
+
+        // Вариант 2: Загрузка из localStorage (для демонстрации)
+        const storedData = localStorage.getItem(`mermaid-diagram-${diagramId}`);
+
+        if (!storedData) {
+            showNotification('Диаграмма не найдена или срок ее хранения истек', 'error');
+            return;
+        }
+
+        const diagramData = JSON.parse(storedData);
+
+        // Устанавливаем загруженные данные
+        if (diagramData.type && diagramTypes.value.find(d => d.id === diagramData.type)) {
+            selectedDiagramType.value = diagramData.type;
+        }
+
+        diagramContent.value = diagramData.content;
+
+        if (diagramData.config) {
+            updateMermaidConfig(diagramData.config);
+        }
+
+        showNotification('Диаграмма успешно загружена', 'success');
+    } catch (error) {
+        console.error('Ошибка при загрузке диаграммы:', error);
+        showNotification('Ошибка при загрузке диаграммы', 'error');
+    } finally {
+        isLoading.value = false;
+    }
+}
+
+
+
+
+
+// 4. Инициализировать плагин экспорта вместе с плагином подсветки:
+function initExportPlugin() {
+    // Создаем экземпляр плагина экспорта с настройками
+    svgExportPlugin.value = new SvgExportPlugin({
+        fileName: 'mermaid-diagram',
+        background: mermaidConfig.value.backgroundColor,
+        addWatermark: false,
+        includeStyles: true,
+        scale: 2 // Масштаб для PNG экспорта
+    });
+}
+
+
+
+
 
 function updateDiagramCode(newCode) {
     diagramContent.value = newCode;
@@ -186,11 +655,17 @@ onMounted(async () => {
         containerRef.value.style.cursor = 'grab';
     }
 
-    // Загрузка диаграммы из файла
+    // Загрузка примера диаграммы по умолчанию (вместо загрузки из файла)
     try {
-        const response = await fetch(props.diagramPath);
-        if (!response.ok) throw new Error('Не удалось загрузить диаграмму');
-        diagramContent.value = await response.text();
+        // Если задан путь к файлу, загружаем из него
+        if (props.diagramPath && props.diagramPath !== 'demo') {
+            const response = await fetch(props.diagramPath);
+            if (!response.ok) throw new Error('Не удалось загрузить диаграмму');
+            diagramContent.value = await response.text();
+        } else {
+            // Иначе используем выбранный пример диаграммы
+            loadSelectedDiagram();
+        }
 
         // Рендеринг диаграммы после небольшой задержки для полной инициализации DOM
         setTimeout(() => {
@@ -207,11 +682,25 @@ onMounted(async () => {
     if (highlightPlugin.value) {
         highlightPlugin.value.destroy();
     }
+
+
+    // Проверяем URL на наличие параметра diagram
+    const urlParams = new URLSearchParams(window.location.search);
+    const diagramId = urlParams.get('diagram');
+
+    if (diagramId) {
+        await loadDiagramFromId(diagramId);
+    } else {
+
+    }
+
+
+
 });
 
 onUnmounted(() => {
     window.removeEventListener('resize', resetView);
-    window.removeEventListener('resize', handleResize);
+    // window.removeEventListener('resize', handleResize);
 
     // Уничтожаем плагины
     if (highlightPlugin.value) {
@@ -250,9 +739,27 @@ function zoomOut() {
 function resetView() {
     if (!containerRef.value || !diagramRef.value) return;
 
+    const svgElement = diagramRef.value.querySelector('svg');
+    if (!svgElement) {
+        console.warn('SVG-элемент не найден, откладываем центрирование...');
+        setTimeout(resetView, 100); // Повторная попытка через 100 мс
+        return;
+    }
+
+    // Проверка, что SVG полностью инициализирован
+    try {
+        // Проверка работоспособности getBBox
+        svgElement.getBBox();
+    } catch (error) {
+        console.warn('SVG не готов для получения размеров, откладываем центрирование...', error);
+        setTimeout(resetView, 100); // Повторная попытка через 100 мс
+        return;
+    }
+
     // Получаем размеры контейнера и диаграммы
     const containerRect = containerRef.value.getBoundingClientRect();
     const diagramRect = diagramRef.value.getBoundingClientRect();
+
 
     // Вычисляем масштаб только по высоте для вписывания диаграммы по высоте контейнера
     const containerHeight = containerRect.height;
@@ -278,8 +785,24 @@ function resetView() {
 
 }
 
-function centerDiagram() {
+async function centerDiagram() {
     if (!containerRef.value || !diagramRef.value) return;
+
+    // Проверка наличия SVG-элемента в диаграмме
+    const svgElement = diagramRef.value.querySelector('svg');
+    if (!svgElement) {
+        console.warn('SVG-элемент не найден, откладываем центрирование...');
+        return; // Просто выходим, resetView вызовет centerDiagram позже
+    }
+
+    // Проверка, что SVG полностью инициализирован
+    try {
+        // Проверка работоспособности getBBox
+        svgElement.getBBox();
+    } catch (error) {
+        console.warn('SVG не готов для получения размеров, откладываем центрирование...', error);
+        return; // Просто выходим, resetView вызовет centerDiagram позже
+    }
     // Получаем размеры контейнера и диаграммы
     const containerRect = containerRef.value.getBoundingClientRect();
     const diagramRect = diagramRef.value.getBoundingClientRect();
@@ -571,7 +1094,35 @@ function showNotification(message, type = 'info', duration = 3000) {
     color: white;
 }
 
+/* Стили для селектора диаграмм */
+.diagram-selector {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    background-color: white;
+    border-radius: 4px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
 
+.diagram-selector label {
+    font-weight: 500;
+    font-size: 14px;
+    color: #333;
+}
+
+.diagram-selector select {
+    padding: 6px 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: white;
+    font-size: 14px;
+    min-width: 200px;
+}
 
 
 
@@ -711,5 +1262,129 @@ function showNotification(message, type = 'info', duration = 3000) {
 .control-button:active {
     transform: translateY(0);
     box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
+}
+
+
+
+
+/* Стили для диалога публикации */
+.share-dialog {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1100;
+}
+
+.share-dialog-content {
+    background-color: white;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+}
+
+.share-dialog-header {
+    color: black;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    border-bottom: 1px solid #eee;
+}
+
+.share-dialog-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.share-dialog-body {
+    padding: 20px;
+}
+
+.share-link-container {
+    display: flex;
+    margin: 15px 0;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.share-link-input {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    font-size: 14px;
+    background-color: #f8f8f8;
+}
+
+.copy-button {
+    padding: 10px 15px;
+    background-color: #2196F3;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.copy-button:hover {
+    background-color: #0b7dda;
+}
+
+.share-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.generate-link-button, .export-config-button {
+    flex: 1;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.generate-link-button {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.generate-link-button:hover {
+    background-color: #45a049;
+}
+
+.generate-link-button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+.export-config-button {
+    background-color: #f0f0f0;
+    color: #333;
+}
+
+.export-config-button:hover {
+    background-color: #e0e0e0;
+}
+
+.share-info {
+    margin-top: 20px;
+}
+
+.note {
+    font-size: 12px;
+    color: #666;
+    margin: 0;
 }
 </style>
