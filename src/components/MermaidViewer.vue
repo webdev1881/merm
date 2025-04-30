@@ -112,7 +112,14 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
-import mermaid from 'mermaid';
+
+
+// import mermaid from 'mermaid';
+// import * as mermaid from 'mermaid';
+// import { initialize, run } from 'mermaid';
+const mermaid = window.mermaid;
+
+
 import SideMenu from './SideMenu.vue';
 // Импортируем плагин подсветки
 import HighlightPlugin from './HighlightPlugin.js';
