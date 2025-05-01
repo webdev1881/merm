@@ -161,82 +161,82 @@ const diagramTypes = ref([
     База данных-->>Система: Результат проверки
     Система-->>Пользователь: Ответ системы`
     },
-    {
-        id: 'flowchart',
-        name: 'Блок-схема (Flowchart)',
-        code: `flowchart TD
-    A[Начало] --> B{Условие?}
-    B -->|Да| C[Процесс 1]
-    B -->|Нет| D[Процесс 2]
-    B -->|Да| X[Процесс 1]
-    B -->|Нет| Y[Процесс 2]
-    B -->|Нет| Z[Процесс 2]
-    C --> E[Конец]
-    D --> E`
-    },
-    {
-        id: 'classDiagram',
-        name: 'Диаграмма классов (Class)',
-        code: `classDiagram
-    class Manager0 {
-        +List~Employee~ team
-        +assignTask()
-    }
-    class Manager4 {
-        +List~Employee~ team
-        +assignTask()
-    }
-    class Manager5 {
-        +List~Employee~ team
-        +assignTask()
-    }
-    class Person {
-        +String namee
-        +int age
-        +getDetails()
-    }
-    class Employee {
-        +String position
-        +int salary
-        +work()
-    }
-    class Manager {
-        +List~Employee~ team
-        +assignTask()
-    }
-    class Manager2 {
-        +List~Employee~ team
-        +assignTask()
-    }
-    class Manager3 {
-        +List~Employee~ team
-        +assignTask()
-    }
-    Person <|-- Employee
-    Employee <|-- Manager
-    Person <|-- Manager2
-    Person <|-- Manager3
-    Employee <|-- Manager4
-    Employee <|-- Manager5
-    Employee <|-- Manager0
-    `
-    },
-    {
-        id: 'stateDiagram',
-        name: 'Диаграмма состояний (State)',
-        code: `stateDiagram-v2
-    [*] --> Ожидание
-    Ожидание --> Обработка: Получить запрос
-    Обработка --> Завершено: Успех
-    Обработка --> Ошибка: Сбой
-    Обработка2 --> Состояние: Сбой
-    Обработка3 --> Состояние: Сбой
-    Обработка4 --> Состояние: Сбой
-    Обработка5 --> Состояние: Сбой
-    Завершено --> Ожидание: Новый запрос
-    Ошибка --> Ожидание: Повторить
-    Ожидание --> [*]: Выключение`
-    },
+    // {
+    //     id: 'flowchart',
+    //     name: 'Блок-схема (Flowchart)',
+    //     code: `flowchart TD
+    // A[Начало] --> B{Условие?}
+    // B -->|Да| C[Процесс 1]
+    // B -->|Нет| D[Процесс 2]
+    // B -->|Да| X[Процесс 1]
+    // B -->|Нет| Y[Процесс 2]
+    // B -->|Нет| Z[Процесс 2]
+    // C --> E[Конец]
+    // D --> E`
+    // },
+    // {
+    //     id: 'classDiagram',
+    //     name: 'Диаграмма классов (Class)',
+    //     code: `classDiagram
+    // class Manager0 {
+    //     +List~Employee~ team
+    //     +assignTask()
+    // }
+    // class Manager4 {
+    //     +List~Employee~ team
+    //     +assignTask()
+    // }
+    // class Manager5 {
+    //     +List~Employee~ team
+    //     +assignTask()
+    // }
+    // class Person {
+    //     +String namee
+    //     +int age
+    //     +getDetails()
+    // }
+    // class Employee {
+    //     +String position
+    //     +int salary
+    //     +work()
+    // }
+    // class Manager {
+    //     +List~Employee~ team
+    //     +assignTask()
+    // }
+    // class Manager2 {
+    //     +List~Employee~ team
+    //     +assignTask()
+    // }
+    // class Manager3 {
+    //     +List~Employee~ team
+    //     +assignTask()
+    // }
+    // Person <|-- Employee
+    // Employee <|-- Manager
+    // Person <|-- Manager2
+    // Person <|-- Manager3
+    // Employee <|-- Manager4
+    // Employee <|-- Manager5
+    // Employee <|-- Manager0
+    // `
+    // },
+    // {
+    //     id: 'stateDiagram',
+    //     name: 'Диаграмма состояний (State)',
+    //     code: `stateDiagram-v2
+    // [*] --> Ожидание
+    // Ожидание --> Обработка: Получить запрос
+    // Обработка --> Завершено: Успех
+    // Обработка --> Ошибка: Сбой
+    // Обработка2 --> Состояние: Сбой
+    // Обработка3 --> Состояние: Сбой
+    // Обработка4 --> Состояние: Сбой
+    // Обработка5 --> Состояние: Сбой
+    // Завершено --> Ожидание: Новый запрос
+    // Ошибка --> Ожидание: Повторить
+    // Ожидание --> [*]: Выключение`
+    // },
     {
         id: 'entityRelationship',
         name: 'Диаграмма сущность-связь (ER)',
@@ -375,30 +375,30 @@ const diagramTypes = ref([
     section Релиз
     Развертывание      :a5, after a4, 3d`
     },
-    {
-        id: 'pieChart',
-        name: 'Круговая диаграмма (Pie)',
-        code: `pie
-    title Распределение времени проекта
-    "Разработка" : 40
-    "Тестирование" : 20
-    "Документация" : 15
-    "Встречи" : 15
-    "Прочее" : 10`
-    },
-    {
-        id: 'journey',
-        name: 'Карта взаимодействия (Journey)',
-        code: `journey
-    title Путь пользователя
-    section Регистрация
-      Заполнение формы: 5: Юзер
-      Подтверждение почты: 3: Юзер, Система
-    section Использование
-      Авторизация: 5: Юзер
-      Работа с системой: 4: Юзер
-      Получение результатов: 5: Юзер, Система`
-    }
+    // {
+    //     id: 'pieChart',
+    //     name: 'Круговая диаграмма (Pie)',
+    //     code: `pie
+    // title Распределение времени проекта
+    // "Разработка" : 40
+    // "Тестирование" : 20
+    // "Документация" : 15
+    // "Встречи" : 15
+    // "Прочее" : 10`
+    // },
+    // {
+    //     id: 'journey',
+    //     name: 'Карта взаимодействия (Journey)',
+    //     code: `journey
+    // title Путь пользователя
+    // section Регистрация
+    //   Заполнение формы: 5: Юзер
+    //   Подтверждение почты: 3: Юзер, Система
+    // section Использование
+    //   Авторизация: 5: Юзер
+    //   Работа с системой: 4: Юзер
+    //   Получение результатов: 5: Юзер, Система`
+    // }
 ]);
 
 // Выбранный тип диаграммы
