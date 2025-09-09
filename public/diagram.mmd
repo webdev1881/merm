@@ -1,33 +1,91 @@
-sequenceDiagram
-    actor KM as КМ
-    actor S as Поставщик
-    participant TB as Telegram-бот
-    participant API as API-сервис
-    participant PO as ПП-Odoo
-    participant O as Система Odoo
-
-    KM ->>+ TB: Ввод телефона КМ
-    Note over TB: Проверка телефона КМ в базе
-    alt Телефон КМ не найден
-        TB -->> KM: Сообщение "КМ не найден"
-    else Телефон КМ найден
-        TB -->> KM: Запрос телефона поставщика
-        KM ->>+ TB: Ввод телефона поставщика
-        TB ->>+ API: Запрос создания поставщика
-        API ->>+ O: Создание поставщика
-        alt Поставщик существует
-            O -->> API: Ошибка "Поставщик существует"
-            API -->> TB: Ошибка
-            TB -->> KM: Сообщение об ошибке
-        else Успешно
-            O -->> API: Данные доступа
-            API -->> TB: Данные доступа
-            TB -->> KM: Данные для поставщика
-            KM -->> S: Передача данных доступа
-            S ->>+ PO: Вход по ссылке
-            PO -->> S: Запрос смены пароля
-            S ->> PO: Новый пароль
-            S ->> PO: Заполнение обязательных данных
-            PO ->> O: Сохранение данных
-        end
-    end
+erDiagram
+    Clients ||--o{ Cards : "имеет"
+    Clients ||--o{ Operations : "совершает"
+    
+    Merchants ||--o{ Locations : "содержит"
+    Locations ||--o{ Terminals : "имеет"
+    Terminals ||--o{ Operations : "обслуживает"
+    
+    Product_Groups ||--o{ Products : "включает"
+    Products ||--o{ Sale_Items : "продается"
+    
+    Operations ||--o{ Sale_Items : "содержит"
+    Sale_Items ||--o{ Item_Discounts : "имеет_скидки"
+    
+    Clients {
+        int client_id PK
+        varchar card_code FK
+    }
+    
+    Cards {
+        int card_id PK
+        int client_id FK
+        varchar card_code
+        varchar card_category_name
+    }
+    
+    Merchants {
+        int merchant_id PK
+        varchar merchant_identifier FK
+        varchar merchant_name
+    }
+    
+    Locations {
+        int location_id PK
+        int merchant_id FK
+        varchar location_identifier
+        varchar location_name
+        varchar location_address
+    }
+    
+    Terminals {
+        int terminal_id PK
+        int location_id FK
+        varchar terminal_identifier
+        varchar terminal_name
+    }
+    
+    Product_Groups {
+        varchar ext_sku_group_id PK
+        varchar ext_sku_group_name
+    }
+    
+    Products {
+        varchar ext_sku_id PK
+        varchar ext_sku_group_id FK
+        varchar product_name
+    }
+    
+    Operations {
+        int operation_id PK
+        int sale_id
+        int receipt_id
+        varchar operation_type
+        datetime purchase_datetime
+        int client_id FK
+        varchar card_code
+        int terminal_id FK
+        decimal total_price
+        decimal discount_sum
+        decimal bonus_recall_sum
+        decimal bonus_achievement
+    }
+    
+    Sale_Items {
+        int sale_item_id PK
+        int operation_id FK
+        varchar ext_sku_id FK
+        decimal quantity
+        decimal price
+        decimal amount
+        decimal discount
+        decimal bonus
+    }
+    
+    Item_Discounts {
+        int discount_id PK
+        int sale_item_id FK
+        varchar discount_type
+        decimal discount_value
+        decimal discount_percentage
+    }

@@ -374,7 +374,7 @@ const diagramTypes = ref([
 ]);
 
 // Выбранный тип диаграммы
-const selectedDiagramType = ref('sequence');
+const selectedDiagramType = ref('entityRelationship');
 
 
 // Refs

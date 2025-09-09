@@ -19,7 +19,7 @@ const diagramPath = ref('/diagram.mmd');
 
 <style>
 .app {
-  width: 1024px;
+  width: 1324px;
   height: 100vh;
   margin: 0;
   padding: 20px;
