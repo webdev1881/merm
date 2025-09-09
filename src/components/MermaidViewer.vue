@@ -161,204 +161,176 @@ const diagramTypes = ref([
     База данных-->>Система: Результат проверки
     Система-->>Пользователь: Ответ системы`
     },
-    // {
-    //     id: 'flowchart',
-    //     name: 'Блок-схема (Flowchart)',
-    //     code: `flowchart TD
-    // A[Начало] --> B{Условие?}
-    // B -->|Да| C[Процесс 1]
-    // B -->|Нет| D[Процесс 2]
-    // B -->|Да| X[Процесс 1]
-    // B -->|Нет| Y[Процесс 2]
-    // B -->|Нет| Z[Процесс 2]
-    // C --> E[Конец]
-    // D --> E`
-    // },
-    // {
-    //     id: 'classDiagram',
-    //     name: 'Диаграмма классов (Class)',
-    //     code: `classDiagram
-    // class Manager0 {
-    //     +List~Employee~ team
-    //     +assignTask()
-    // }
-    // class Manager4 {
-    //     +List~Employee~ team
-    //     +assignTask()
-    // }
-    // class Manager5 {
-    //     +List~Employee~ team
-    //     +assignTask()
-    // }
-    // class Person {
-    //     +String namee
-    //     +int age
-    //     +getDetails()
-    // }
-    // class Employee {
-    //     +String position
-    //     +int salary
-    //     +work()
-    // }
-    // class Manager {
-    //     +List~Employee~ team
-    //     +assignTask()
-    // }
-    // class Manager2 {
-    //     +List~Employee~ team
-    //     +assignTask()
-    // }
-    // class Manager3 {
-    //     +List~Employee~ team
-    //     +assignTask()
-    // }
-    // Person <|-- Employee
-    // Employee <|-- Manager
-    // Person <|-- Manager2
-    // Person <|-- Manager3
-    // Employee <|-- Manager4
-    // Employee <|-- Manager5
-    // Employee <|-- Manager0
-    // `
-    // },
-    // {
-    //     id: 'stateDiagram',
-    //     name: 'Диаграмма состояний (State)',
-    //     code: `stateDiagram-v2
-    // [*] --> Ожидание
-    // Ожидание --> Обработка: Получить запрос
-    // Обработка --> Завершено: Успех
-    // Обработка --> Ошибка: Сбой
-    // Обработка2 --> Состояние: Сбой
-    // Обработка3 --> Состояние: Сбой
-    // Обработка4 --> Состояние: Сбой
-    // Обработка5 --> Состояние: Сбой
-    // Завершено --> Ожидание: Новый запрос
-    // Ошибка --> Ожидание: Повторить
-    // Ожидание --> [*]: Выключение`
-    // },
+    {
+        id: 'flowchart',
+        name: 'Блок-схема (Flowchart)',
+        code: `flowchart TD
+    A[Начало] --> B{Условие?}
+    B -->|Да| C[Процесс 1]
+    B -->|Нет| D[Процесс 2]
+    B -->|Да| X[Процесс 1]
+    B -->|Нет| Y[Процесс 2]
+    B -->|Нет| Z[Процесс 2]
+    C --> E[Конец]
+    D --> E`
+    },
+    {
+        id: 'classDiagram',
+        name: 'Диаграмма классов (Class)',
+        code: `classDiagram
+    class Manager0 {
+        +List~Employee~ team
+        +assignTask()
+    }
+    class Manager4 {
+        +List~Employee~ team
+        +assignTask()
+    }
+    class Manager5 {
+        +List~Employee~ team
+        +assignTask()
+    }
+    class Person {
+        +String namee
+        +int age
+        +getDetails()
+    }
+    class Employee {
+        +String position
+        +int salary
+        +work()
+    }
+    class Manager {
+        +List~Employee~ team
+        +assignTask()
+    }
+    class Manager2 {
+        +List~Employee~ team
+        +assignTask()
+    }
+    class Manager3 {
+        +List~Employee~ team
+        +assignTask()
+    }
+    Person <|-- Employee
+    Employee <|-- Manager
+    Person <|-- Manager2
+    Person <|-- Manager3
+    Employee <|-- Manager4
+    Employee <|-- Manager5
+    Employee <|-- Manager0
+    `
+    },
+    {
+        id: 'stateDiagram',
+        name: 'Диаграмма состояний (State)',
+        code: `stateDiagram-v2
+    [*] --> Ожидание
+    Ожидание --> Обработка: Получить запрос
+    Обработка --> Завершено: Успех
+    Обработка --> Ошибка: Сбой
+    Обработка2 --> Состояние: Сбой
+    Обработка3 --> Состояние: Сбой
+    Обработка4 --> Состояние: Сбой
+    Обработка5 --> Состояние: Сбой
+    Завершено --> Ожидание: Новый запрос
+    Ошибка --> Ожидание: Повторить
+    Ожидание --> [*]: Выключение`
+    },
     {
         id: 'entityRelationship',
         name: 'Диаграмма сущность-связь (ER)',
         code: `erDiagram
-    СТУДЕНТ {
-        int студент_id PK
-        string имя
-        string фамилия
-        date дата_рождения
-        string адрес
-        string телефон
-        string email
-        int группа_id FK
+    Clients ||--o{ Cards : "имеет"
+    Clients ||--o{ Operations : "совершает"
+    
+    Merchants ||--o{ Locations : "содержит"
+    Locations ||--o{ Terminals : "имеет"
+    Terminals ||--o{ Operations : "обслуживает"
+    
+    Product_Groups ||--o{ Products : "включает"
+    Products ||--o{ Sale_Items : "продается"
+    
+    Operations ||--o{ Sale_Items : "содержит"
+    Sale_Items ||--o{ Item_Discounts : "имеет_скидки"
+    
+    Clients {
+        int client_id PK
+        datetime created_at
     }
     
-    ПРЕПОДАВАТЕЛЬ {
-        int преподаватель_id PK
-        string имя
-        string фамилия
-        string степень
-        string должность
-        date дата_найма
-        string кафедра
-        string телефон
-        string email
+    Cards {
+        int card_id PK
+        int client_id FK
+        varchar card_code
+        varchar card_category_name
     }
     
-    КУРС {
-        int курс_id PK
-        string название
-        string код_курса
-        int кредиты
-        string описание
-        int кафедра_id FK
+    Merchants {
+        int merchant_id PK
+        varchar merchant_identifier
+        varchar merchant_name
     }
     
-    ГРУППА {
-        int группа_id PK
-        string название_группы
-        int факультет_id FK
-        int год_поступления
+    Locations {
+        int location_id PK
+        int merchant_id FK
+        varchar location_identifier
+        varchar location_name
+        varchar location_address
     }
     
-    ФАКУЛЬТЕТ {
-        int факультет_id PK
-        string название_факультета
-        string аббревиатура
-        int декан_id FK
+    Terminals {
+        int terminal_id PK
+        int location_id FK
+        varchar terminal_identifier
+        varchar terminal_name
     }
     
-    КАФЕДРА {
-        int кафедра_id PK
-        string название_кафедры
-        int факультет_id FK
-        int заведующий_id FK
+    Product_Groups {
+        varchar ext_sku_group_id PK
+        varchar ext_sku_group_name
     }
     
-    АУДИТОРИЯ {
-        int аудитория_id PK
-        string номер_аудитории
-        string здание
-        int вместимость
-        string тип_аудитории
+    Products {
+        varchar ext_sku_id PK
+        varchar ext_sku_group_id FK
+        varchar product_name
     }
     
-    РАСПИСАНИЕ {
-        int расписание_id PK
-        int курс_id FK
-        int преподаватель_id FK
-        int аудитория_id FK
-        int группа_id FK
-        date дата
-        time время_начала
-        time время_окончания
-        string день_недели
+    Operations {
+        int operation_id PK
+        int sale_id
+        int receipt_id
+        varchar operation_type
+        datetime purchase_datetime
+        int client_id FK
+        varchar card_code
+        int terminal_id FK
+        decimal total_price
+        decimal discount_sum
+        decimal bonus_recall_sum
+        decimal bonus_achievement
     }
     
-    ОЦЕНКА {
-        int оценка_id PK
-        int студент_id FK
-        int курс_id FK
-        int преподаватель_id FK
-        date дата_оценки
-        int балл
-        string тип_оценки
+    Sale_Items {
+        int sale_item_id PK
+        int operation_id FK
+        varchar ext_sku_id FK
+        decimal quantity
+        decimal price
+        decimal amount
+        decimal discount
+        decimal bonus
     }
     
-    БИБЛИОТЕКА_РЕСУРС {
-        int ресурс_id PK
-        string название
-        string тип_ресурса
-        string автор
-        date дата_публикации
-        string издательство
-        int количество_копий
-    }
-    
-    ВЫДАЧА_РЕСУРСА {
-        int выдача_id PK
-        int студент_id FK
-        int ресурс_id FK
-        date дата_выдачи
-        date дата_возврата
-        string статус
-    }
-    
-    СТУДЕНТ ||--o{ ОЦЕНКА : "получает"
-    СТУДЕНТ }|--|| ГРУППА : "входит в"
-    ГРУППА }|--|| ФАКУЛЬТЕТ : "относится к"
-    ПРЕПОДАВАТЕЛЬ ||--o{ ОЦЕНКА : "выставляет"
-    ПРЕПОДАВАТЕЛЬ ||--o{ РАСПИСАНИЕ : "ведет занятия"
-    ПРЕПОДАВАТЕЛЬ |o--|| КАФЕДРА : "работает на"
-    КУРС ||--o{ ОЦЕНКА : "оценивается"
-    КУРС ||--o{ РАСПИСАНИЕ : "проводится"
-    КУРС }|--|| КАФЕДРА : "относится к"
-    АУДИТОРИЯ ||--o{ РАСПИСАНИЕ : "используется для"
-    ГРУППА ||--o{ РАСПИСАНИЕ : "посещает занятия"
-    ФАКУЛЬТЕТ ||--o{ КАФЕДРА : "содержит"
-    ПРЕПОДАВАТЕЛЬ |o--o| ФАКУЛЬТЕТ : "является деканом"
-    ПРЕПОДАВАТЕЛЬ |o--o| КАФЕДРА : "является заведующим"
-    СТУДЕНТ ||--o{ ВЫДАЧА_РЕСУРСА : "берет"
-    БИБЛИОТЕКА_РЕСУРС ||--o{ ВЫДАЧА_РЕСУРСА : "выдается"`
+    Item_Discounts {
+        int discount_id PK
+        int sale_item_id FK
+        varchar discount_type
+        decimal discount_value
+        decimal discount_percentage
+    }`
     },
     {
         id: 'gantt',
@@ -375,30 +347,30 @@ const diagramTypes = ref([
     section Релиз
     Развертывание      :a5, after a4, 3d`
     },
-    // {
-    //     id: 'pieChart',
-    //     name: 'Круговая диаграмма (Pie)',
-    //     code: `pie
-    // title Распределение времени проекта
-    // "Разработка" : 40
-    // "Тестирование" : 20
-    // "Документация" : 15
-    // "Встречи" : 15
-    // "Прочее" : 10`
-    // },
-    // {
-    //     id: 'journey',
-    //     name: 'Карта взаимодействия (Journey)',
-    //     code: `journey
-    // title Путь пользователя
-    // section Регистрация
-    //   Заполнение формы: 5: Юзер
-    //   Подтверждение почты: 3: Юзер, Система
-    // section Использование
-    //   Авторизация: 5: Юзер
-    //   Работа с системой: 4: Юзер
-    //   Получение результатов: 5: Юзер, Система`
-    // }
+    {
+        id: 'pieChart',
+        name: 'Круговая диаграмма (Pie)',
+        code: `pie
+    title Распределение времени проекта
+    "Разработка" : 40
+    "Тестирование" : 20
+    "Документация" : 15
+    "Встречи" : 15
+    "Прочее" : 10`
+    },
+    {
+        id: 'journey',
+        name: 'Карта взаимодействия (Journey)',
+        code: `journey
+    title Путь пользователя
+    section Регистрация
+      Заполнение формы: 5: Юзер
+      Подтверждение почты: 3: Юзер, Система
+    section Использование
+      Авторизация: 5: Юзер
+      Работа с системой: 4: Юзер
+      Получение результатов: 5: Юзер, Система`
+    }
 ]);
 
 // Выбранный тип диаграммы
