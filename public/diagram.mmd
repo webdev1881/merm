@@ -1,91 +1,167 @@
 erDiagram
-    Clients ||--o{ Cards : "имеет"
-    Clients ||--o{ Operations : "совершает"
+    %% Клиентская часть (API: contacts)
+    Clients ||--o{ Cards : "владеет_картами"
+    Clients ||--o{ Operations : "совершает_покупки"
+    Clients ||--o{ Bonus_Operations : "имеет_бонусные_операции"
+    Cards ||--o{ Operations : "используется_в_операциях"
     
-    Merchants ||--o{ Locations : "содержит"
-    Locations ||--o{ Terminals : "имеет"
-    Terminals ||--o{ Operations : "обслуживает"
+    %% Инфраструктура торговли (API: operations)
+    Merchants ||--o{ Locations : "имеет_точки"
+    Locations ||--o{ Terminals : "содержит_терминалы"
+    Terminals ||--o{ Operations : "обрабатывает_операции"
     
-    Product_Groups ||--o{ Products : "включает"
-    Products ||--o{ Sale_Items : "продается"
+    %% Товарная структура (API: operations)
+    Product_Groups ||--o{ Products : "объединяет_товары"
     
-    Operations ||--o{ Sale_Items : "содержит"
+    %% Основная связь операций и товаров через itemList
+    Operations ||--o{ Sale_Items : "содержит_itemList"
+    Products ||--o{ Sale_Items : "представлен_в_позиции"
+    
+    %% Скидки по позициям
     Sale_Items ||--o{ Item_Discounts : "имеет_скидки"
     
+    %% Бонусная система (API: getBonusWriteOff)
+    Operations ||--o{ Bonus_Operations : "связана_через_documentId"
+    Achievement_Rules ||--o{ Bonus_Operations : "правило_начисления"
+    Recall_Rules ||--o{ Bonus_Operations : "правило_списания"
+    
+    %% Определение структур таблиц
+    
     Clients {
-        int client_id PK
-        varchar card_code FK
+        int client_id PK "ID клиента из contacts"
+        varchar first_name "Краткое имя"
+        varchar last_name "Полное имя"
+        date birth_date "Дата рождения (1983-06-17)"
+        varchar gender "Пол (Жіночий)"
+        varchar mobile_phone "Мобильный телефон"
+        varchar email "Email"
+        text address "Адрес"
+        int client_category_id FK "ID категории клиента"
+        varchar client_category_name "Название категории"
+        datetime created_at "Дата создания"
     }
     
     Cards {
-        int card_id PK
-        int client_id FK
-        varchar card_code
-        varchar card_category_name
+        int card_id PK "ID карты"
+        int client_id FK "Владелец"
+        varchar card_code UK "Код карты (1000132053)"
+        varchar external_code UK "Внешний код"
+        datetime data_card_issuance "Дата выпуска"
+        varchar status "Статус (Активна)"
+        int card_category_id FK "ID категории"
+        varchar card_category_name "Категория (Пластик - СМК)"
+        datetime created_at "Дата создания"
     }
     
     Merchants {
-        int merchant_id PK
-        varchar merchant_identifier FK
-        varchar merchant_name
+        int merchant_id PK "ID торговой сети"
+        varchar merchant_identifier UK "Идентификатор (kh)"
+        varchar merchant_name "Название (СМК Харків)"
+        datetime created_at "Дата добавления"
     }
     
     Locations {
-        int location_id PK
-        int merchant_id FK
-        varchar location_identifier
-        varchar location_name
-        varchar location_address
+        int location_id PK "ID точки продаж"
+        int merchant_id FK "Принадлежность сети"
+        varchar location_identifier UK "Идентификатор (kh199)"
+        varchar location_name "Название точки"
+        varchar location_address "Адрес точки"
+        datetime created_at "Дата открытия"
     }
     
     Terminals {
-        int terminal_id PK
-        int location_id FK
-        varchar terminal_identifier
-        varchar terminal_name
+        int terminal_id PK "ID терминала"
+        int location_id FK "Расположение"
+        varchar terminal_identifier UK "Идентификатор (kh199_5)"
+        varchar terminal_name "Название терминала"
+        boolean is_active "Статус активности"
+        datetime created_at "Дата установки"
     }
     
     Product_Groups {
-        varchar ext_sku_group_id PK
-        varchar ext_sku_group_name
+        varchar ext_sku_group_id PK "UUID группы"
+        varchar ext_sku_group_name "Название группы"
+        varchar parent_group_id FK "Родительская группа"
+        datetime created_at "Дата создания"
     }
     
     Products {
-        varchar ext_sku_id PK
-        varchar ext_sku_group_id FK
-        varchar product_name
+        varchar ext_sku_id PK "SKU товара (29166)"
+        varchar ext_sku_group_id FK "Группа товара"
+        varchar product_name "Название товара"
+        varchar barcode UK "Штрихкод"
+        boolean is_active "Статус в продаже"
+        datetime created_at "Дата добавления"
     }
     
     Operations {
-        int operation_id PK
-        int sale_id
-        int receipt_id
-        varchar operation_type
-        datetime purchase_datetime
-        int client_id FK
-        varchar card_code
-        int terminal_id FK
-        decimal total_price
-        decimal discount_sum
-        decimal bonus_recall_sum
-        decimal bonus_achievement
+        int operation_id PK "ID операции (10193803)"
+        int sale_id "ID продажи (11165434)"
+        int receipt_id "Номер чека (52348)"
+        varchar document_id UK "Документ для связи с бонусами"
+        varchar operation_type "Тип операции"
+        datetime purchase_datetime "Время покупки"
+        int client_id FK "Покупатель"
+        varchar card_code "Код карты"
+        int terminal_id FK "Терминал операции"
+        decimal total_price "Общая сумма"
+        decimal discount_sum "Размер скидки"
+        decimal bonus_recall_sum "Списано бонусов"
+        decimal bonus_achievement "Начислено бонусов"
     }
     
     Sale_Items {
-        int sale_item_id PK
-        int operation_id FK
-        varchar ext_sku_id FK
-        decimal quantity
-        decimal price
-        decimal amount
-        decimal discount
-        decimal bonus
+        int sale_item_id PK "ID позиции в чеке"
+        int operation_id FK "Принадлежность операции"
+        varchar ext_sku_id FK "Товар в позиции"
+        decimal quantity "Количество"
+        decimal price "Цена за единицу"
+        decimal amount "Сумма по позиции"
+        decimal discount "Скидка по позиции"
+        decimal bonus "Бонус по позиции"
+        int line_number "Номер строки в чеке"
     }
     
     Item_Discounts {
-        int discount_id PK
-        int sale_item_id FK
-        varchar discount_type
-        decimal discount_value
-        decimal discount_percentage
+        int discount_id PK "ID скидки"
+        int sale_item_id FK "Позиция со скидкой"
+        varchar discount_type "Тип скидки"
+        varchar discount_name "Название акции"
+        decimal discount_value "Размер скидки"
+        decimal discount_percentage "Процент скидки"
+        datetime created_at "Время применения"
+    }
+    
+    Achievement_Rules {
+        int achievement_rule_id PK "ID правила начисления (13)"
+        varchar achievement_rule_desc "Описание правила"
+        boolean is_active "Статус активности"
+        datetime created_at "Дата создания"
+    }
+    
+    Recall_Rules {
+        int recall_rule_id PK "ID правила списания (1)"
+        varchar recall_rule_desc "Описание правила"
+        boolean is_active "Статус активности"
+        datetime created_at "Дата создания"
+    }
+    
+    Bonus_Operations {
+        int bonus_operation_id PK "ID бонусной операции (37195899)"
+        datetime operation_date "Дата операции"
+        int achievement_rule_id FK "Правило начисления"
+        int recall_rule_id FK "Правило списания"
+        varchar card_code "Код карты (1000560924)"
+        varchar external_card_code "Внешний код карты"
+        varchar card_category_name "Категория карты"
+        int client_id FK "Клиент (1266449)"
+        varchar client_desc "Описание клиента"
+        decimal points_amount "Сумма бонусов (0.69)"
+        decimal remain_points_amount "Остаток бонусов (1.83)"
+        bigint sale_id "ID продажи"
+        int achievement_operation_id "ID операции начисления"
+        varchar document_id FK "Связь с операцией (48270)"
+        varchar document_description "Описание документа"
+        varchar status "Статус (Проведена)"
+        varchar source_type "Источник (POS)"
     }
