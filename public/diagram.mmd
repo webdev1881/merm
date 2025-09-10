@@ -1,167 +1,135 @@
 erDiagram
-    %% Клиентская часть (API: contacts)
-    Clients ||--o{ Cards : "владеет_картами"
-    Clients ||--o{ Operations : "совершает_покупки"
-    Clients ||--o{ Bonus_Operations : "имеет_бонусные_операции"
-    Cards ||--o{ Operations : "используется_в_операциях"
+    %% Связи между API
+    Contacts ||--o{ Operations : "clientId"
+    Operations ||--o{ getBonusWriteOff : "documentId"
+    Contacts ||--o{ getBonusWriteOff : "clientId"
     
-    %% Инфраструктура торговли (API: operations)
-    Merchants ||--o{ Locations : "имеет_точки"
-    Locations ||--o{ Terminals : "содержит_терминалы"
-    Terminals ||--o{ Operations : "обрабатывает_операции"
+    %% Инфраструктура торговли
+    Регион ||--o{ АТТ : "merchant_id"
+    АТТ ||--o{ ПОС : "location_id"
+    ПОС ||--o{ Operations : "terminal_id"
     
-    %% Товарная структура (API: operations)
-    Product_Groups ||--o{ Products : "объединяет_товары"
+    %% Товарная структура
+    Product_Groups ||--o{ Products : "ext_sku_group_id"
     
     %% Основная связь операций и товаров через itemList
-    Operations ||--o{ Sale_Items : "содержит_itemList"
-    Products ||--o{ Sale_Items : "представлен_в_позиции"
+    Operations ||--o{ Sale_Items : "operationId"
+    Products ||--o{ Sale_Items : "ext_sku_id"
     
-    %% Скидки по позициям
-    Sale_Items ||--o{ Item_Discounts : "имеет_скидки"
+    %% Бонусные правила
+    Achievement_Rules ||--o{ getBonusWriteOff : "achievementRuleId"
+    Recall_Rules ||--o{ getBonusWriteOff : "recallRuleId"
     
-    %% Бонусная система (API: getBonusWriteOff)
-    Operations ||--o{ Bonus_Operations : "связана_через_documentId"
-    Achievement_Rules ||--o{ Bonus_Operations : "правило_начисления"
-    Recall_Rules ||--o{ Bonus_Operations : "правило_списания"
-    
-    %% Определение структур таблиц
-    
-    Clients {
-        int client_id PK "ID клиента из contacts"
-        varchar first_name "Краткое имя"
-        varchar last_name "Полное имя"
-        date birth_date "Дата рождения (1983-06-17)"
-        varchar gender "Пол (Жіночий)"
-        varchar mobile_phone "Мобильный телефон"
-        varchar email "Email"
-        text address "Адрес"
-        int client_category_id FK "ID категории клиента"
-        varchar client_category_name "Название категории"
-        datetime created_at "Дата создания"
+    %% API: /api/contacts
+    Contacts {
+        int clientId PK "743945"
+        varchar firstName "Молька Т. В."
+        varchar lastName "Молька Таміла Володимирівна"
+        date birthDate "1983-06-17"
+        varchar gender "Жіночий"
+        varchar mobilePhone ""
+        varchar email ""
+        text address "null"
+        varchar card_code "1000132053"
+        varchar external_code "1000132053"
+        datetime dataCardIssuance "2022-09-03T15:50:06"
+        varchar status "Активна"
+        int cardCategoryId "3"
+        varchar cardCategoryName "Пластик - СМК"
+        int clientCategoryId "null"
+        varchar clientCategoryName "null"
     }
     
-    Cards {
-        int card_id PK "ID карты"
-        int client_id FK "Владелец"
-        varchar card_code UK "Код карты (1000132053)"
-        varchar external_code UK "Внешний код"
-        datetime data_card_issuance "Дата выпуска"
-        varchar status "Статус (Активна)"
-        int card_category_id FK "ID категории"
-        varchar card_category_name "Категория (Пластик - СМК)"
-        datetime created_at "Дата создания"
+    %% API: /api/operations - Торговая инфраструктура
+    Регион {
+        int merchant_id PK "2"
+        varchar merchant_identifier "kh"
+        varchar merchantName "СМК Харків"
     }
     
-    Merchants {
-        int merchant_id PK "ID торговой сети"
-        varchar merchant_identifier UK "Идентификатор (kh)"
-        varchar merchant_name "Название (СМК Харків)"
-        datetime created_at "Дата добавления"
+    АТТ {
+        int location_id PK "13"
+        int merchant_id FK "2"
+        varchar location_identifier "kh199"
+        varchar locationName "Первомайський №199"
+        varchar locationAdress "вул. Багайченка, 23"
     }
     
-    Locations {
-        int location_id PK "ID точки продаж"
-        int merchant_id FK "Принадлежность сети"
-        varchar location_identifier UK "Идентификатор (kh199)"
-        varchar location_name "Название точки"
-        varchar location_address "Адрес точки"
-        datetime created_at "Дата открытия"
+    ПОС {
+        int terminal_id PK "461"
+        int location_id FK "13"
+        varchar terminalName "199-5 Харьков"
+        varchar terminal_identifier "kh199_5"
     }
     
-    Terminals {
-        int terminal_id PK "ID терминала"
-        int location_id FK "Расположение"
-        varchar terminal_identifier UK "Идентификатор (kh199_5)"
-        varchar terminal_name "Название терминала"
-        boolean is_active "Статус активности"
-        datetime created_at "Дата установки"
-    }
-    
+    %% API: /api/operations - Товары
     Product_Groups {
-        varchar ext_sku_group_id PK "UUID группы"
-        varchar ext_sku_group_name "Название группы"
-        varchar parent_group_id FK "Родительская группа"
-        datetime created_at "Дата создания"
+        varchar ext_sku_group_id PK "21c507c5-77ec-11ea-8d9a-000c2950e53b"
+        varchar ext_sku_group_name "Печиво"
     }
     
     Products {
-        varchar ext_sku_id PK "SKU товара (29166)"
-        varchar ext_sku_group_id FK "Группа товара"
-        varchar product_name "Название товара"
-        varchar barcode UK "Штрихкод"
-        boolean is_active "Статус в продаже"
-        datetime created_at "Дата добавления"
+        varchar ext_sku_id PK "29166"
+        varchar ext_sku_group_id FK "21c507c5-77ec-11ea-8d9a-000c2950e53b"
+        varchar name "Печиво снеки злакові хрусткі полуниця Тікі Стікі Вондер Мілл 550гр"
     }
     
+    %% API: /api/operations - Основная операция
     Operations {
-        int operation_id PK "ID операции (10193803)"
-        int sale_id "ID продажи (11165434)"
-        int receipt_id "Номер чека (52348)"
-        varchar document_id UK "Документ для связи с бонусами"
-        varchar operation_type "Тип операции"
-        datetime purchase_datetime "Время покупки"
-        int client_id FK "Покупатель"
-        varchar card_code "Код карты"
-        int terminal_id FK "Терминал операции"
-        decimal total_price "Общая сумма"
-        decimal discount_sum "Размер скидки"
-        decimal bonus_recall_sum "Списано бонусов"
-        decimal bonus_achievement "Начислено бонусов"
+        int operationId PK "10193803"
+        int saleId "11165434"
+        int receiptId "52348"
+        varchar type "Продаж товарів"
+        datetime purchaseDatetime "2022-09-04T12:00:20"
+        int client_id FK "24584"
+        varchar card_code "1000123228"
+        varchar cardCategoryName "Пластик - СМК"
+        int terminal_id FK "461"
+        decimal totalPrice "119.8"
+        decimal discountSum "0.0"
+        decimal bonusRecallSum "0.0"
+        decimal bonusAchievement "1.2"
     }
     
+    %% API: /api/operations - itemList
     Sale_Items {
-        int sale_item_id PK "ID позиции в чеке"
-        int operation_id FK "Принадлежность операции"
-        varchar ext_sku_id FK "Товар в позиции"
-        decimal quantity "Количество"
-        decimal price "Цена за единицу"
-        decimal amount "Сумма по позиции"
-        decimal discount "Скидка по позиции"
-        decimal bonus "Бонус по позиции"
-        int line_number "Номер строки в чеке"
+        int operationId FK "10193803"
+        varchar ext_sku_id FK "29166"
+        decimal quantity "1.0"
+        decimal price "59.9"
+        decimal amount "59.9"
+        decimal discount "0.0"
+        decimal bonus "0.0"
     }
     
-    Item_Discounts {
-        int discount_id PK "ID скидки"
-        int sale_item_id FK "Позиция со скидкой"
-        varchar discount_type "Тип скидки"
-        varchar discount_name "Название акции"
-        decimal discount_value "Размер скидки"
-        decimal discount_percentage "Процент скидки"
-        datetime created_at "Время применения"
-    }
-    
+    %% API: /api/getBonusWriteOff - Правила
     Achievement_Rules {
-        int achievement_rule_id PK "ID правила начисления (13)"
-        varchar achievement_rule_desc "Описание правила"
-        boolean is_active "Статус активности"
-        datetime created_at "Дата создания"
+        int achievementRuleId PK "13"
+        varchar achievementRuleIdDesc "Накопление бонусов от суммы чека 1% - Киев"
     }
     
     Recall_Rules {
-        int recall_rule_id PK "ID правила списания (1)"
-        varchar recall_rule_desc "Описание правила"
-        boolean is_active "Статус активности"
-        datetime created_at "Дата создания"
+        int recallRuleId PK "1"
+        varchar recallRuleIdDesc "Списание (исключение кулинария)"
     }
     
-    Bonus_Operations {
-        int bonus_operation_id PK "ID бонусной операции (37195899)"
-        datetime operation_date "Дата операции"
-        int achievement_rule_id FK "Правило начисления"
-        int recall_rule_id FK "Правило списания"
-        varchar card_code "Код карты (1000560924)"
-        varchar external_card_code "Внешний код карты"
-        varchar card_category_name "Категория карты"
-        int client_id FK "Клиент (1266449)"
-        varchar client_desc "Описание клиента"
-        decimal points_amount "Сумма бонусов (0.69)"
-        decimal remain_points_amount "Остаток бонусов (1.83)"
-        bigint sale_id "ID продажи"
-        int achievement_operation_id "ID операции начисления"
-        varchar document_id FK "Связь с операцией (48270)"
-        varchar document_description "Описание документа"
-        varchar status "Статус (Проведена)"
-        varchar source_type "Источник (POS)"
+    %% API: /api/getBonusWriteOff
+    getBonusWriteOff {
+        int id PK "37195899"
+        datetime date "2025-09-04T12:00:06"
+        int achievementRuleId FK "13"
+        int recallRuleId FK "1"
+        varchar cardCode "1000560924"
+        varchar externalCardCode "1000560924"
+        varchar cardCategoryName "null"
+        int clientId FK "1266449"
+        varchar clientIdDesc "Карти В."
+        decimal pointsAmount "0.69"
+        decimal remainPointsAmount "1.83"
+        bigint saleId "6891756976399909"
+        int achievementOperationId "32126281"
+        varchar documentId FK "48270"
+        varchar documentDescription "ФЧ №68621/763"
+        varchar status "Проведена"
+        varchar sourceType "POS"
     }
